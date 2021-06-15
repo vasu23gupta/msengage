@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "551997104480",
+    "project_id": "teams-clone-d08e6",
+    "storage_bucket": "teams-clone-d08e6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:551997104480:android:01f28d67cd8393cd203e05",
+        "android_client_info": {
+          "package_name": "com.VasuGupta.teams_clone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "551997104480-4ovfl76fqo7oqk0tnn0i9034jolj50ke.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzqDqRfAdJCyoVh24KXo2Fow3_r0JtDvY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "551997104480-4ovfl76fqo7oqk0tnn0i9034jolj50ke.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
