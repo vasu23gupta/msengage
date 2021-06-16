@@ -61,4 +61,13 @@ class ChatDatabaseService {
         body: body);
     return res;
   }
+
+  static Future<bool> leaveChatRoom(String roomId, String uid) async {
+    http.Response res = await http.patch(
+      Uri.parse(_chatUrl + "room/leave/" + roomId),
+      headers: {'authorisation': uid},
+    );
+    if (res.statusCode == 200) return true;
+    return false;
+  }
 }

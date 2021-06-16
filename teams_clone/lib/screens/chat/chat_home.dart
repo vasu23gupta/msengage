@@ -18,8 +18,7 @@ class ChatHome extends StatefulWidget {
 }
 
 class _ChatHomeState extends State<ChatHome> {
-  List<String> _roomIds = [];
-
+  List<ChatRoom> _rooms = [];
   @override
   void initState() {
     super.initState();
@@ -43,19 +42,21 @@ class _ChatHomeState extends State<ChatHome> {
 
   Widget _buildScaffold() {
     return FutureBuilder(
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return CircularProgressIndicator();
-          }
-          Response res = snapshot.data as Response;
-          var body = jsonDecode(res.body);
-          return ListView.builder(
-            itemCount: body['conversation'].length,
-            itemBuilder: (context, index) => _buildChatRoomTile(
-                ChatRoom.fromHomeJson(body['conversation'][index])),
-          );
-        },
-        future: ChatDatabaseService.getChatRooms(_user!.uid));
+      future: ChatDatabaseService.getChatRooms(_user!.uid),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return CircularProgressIndicator();
+
+        Response res = snapshot.data as Response;
+        var body = jsonDecode(res.body);
+        _rooms.clear();
+        for (var json in body['conversation'])
+          _rooms.add(ChatRoom.fromHomeJson(json));
+        return ListView.builder(
+          itemCount: _rooms.length,
+          itemBuilder: (context, index) => _buildChatRoomTile(_rooms[index]),
+        );
+      },
+    );
   }
 
   ListTile _buildChatRoomTile(ChatRoom room) => ListTile(

@@ -21,8 +21,7 @@ class _HomeState extends State<Home> {
 
   int _currentIndex = 1;
   late User? _user;
-
-  //List<String> _pageKeys = ['Activity', 'Chat', 'Meet', 'More'];
+  List<String> _appBarTitles = ['Feed', 'Chat', 'Meet Now', 'More'];
 
   void _onPageChanged(int index) {
     if (index == 3) {
@@ -35,7 +34,10 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text(_appBarTitles[_currentIndex],
+            style: TextStyle(color: Colors.black, fontSize: 17)),
+      ),
       drawer: Drawer(
         child: ListView(
           children: <Widget>[
