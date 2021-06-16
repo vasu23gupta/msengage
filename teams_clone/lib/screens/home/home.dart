@@ -60,7 +60,7 @@ class _HomeState extends State<Home> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        selectedItemColor: Colors.blueAccent,
+        //selectedItemColor: Colors.blueAccent,
         unselectedItemColor: Colors.grey,
         onTap: _onPageChanged,
         type: BottomNavigationBarType.fixed,

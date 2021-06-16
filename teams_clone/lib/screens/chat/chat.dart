@@ -8,8 +8,10 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
+import 'package:teams_clone/screens/chat/chat_details.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
+import 'package:teams_clone/shared/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Chat extends StatefulWidget {
@@ -25,6 +27,9 @@ class _ChatState extends State<Chat> {
   TextEditingController _enterMsgController = TextEditingController();
   PlatformFile? pFile;
   bool _uploading = false;
+  late double _h;
+  late double _w;
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -33,6 +38,7 @@ class _ChatState extends State<Chat> {
     _room = widget.room;
     print(_room.roomId);
     socket.emit("subscribe", {"room": _room.roomId});
+    print(_room.name);
   }
 
   @override
@@ -43,6 +49,8 @@ class _ChatState extends State<Chat> {
 
   @override
   Widget build(BuildContext context) {
+    _h = MediaQuery.of(context).size.height;
+    _w = MediaQuery.of(context).size.width;
     return FutureBuilder(
         future: ChatDatabaseService.getChatRoomByRoomId(_room.roomId),
         builder: (context, snapshot) {
@@ -51,77 +59,101 @@ class _ChatState extends State<Chat> {
           _room = snapshot.data as ChatRoom;
           return Scaffold(
             appBar: AppBar(
-              title: Text(_room.name),
+              iconTheme: IconThemeData(color: Colors.black),
+              title: TextButton(
+                child: Text(_room.name,
+                    style: TextStyle(color: Colors.black, fontSize: 17)),
+                onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => ChatDetails(_room))),
+              ),
             ),
-            body: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                StreamBuilder(
-                  stream: streamSocket.getResponse,
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData) {
-                      print("snapshot data: " + snapshot.data.toString());
-                      var json =
-                          jsonDecode(jsonEncode(snapshot.data))['message'];
-                      print(json);
-                      ChatMessage cm = ChatMessage.fromJson(json);
-                      print(cm.id);
-                      print(cm.msg);
-                      print(cm.roomId);
-                      print(cm.userId);
-                      print(cm.isMedia);
-                      _room.messages.add(cm);
-                    }
-                    return ListView(
+            body: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  StreamBuilder(
+                    stream: streamSocket.getResponse,
+                    builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData) {
+                        print("snapshot data: " + snapshot.data.toString());
+                        var json =
+                            jsonDecode(jsonEncode(snapshot.data))['message'];
+                        print(json);
+                        ChatMessage cm = ChatMessage.fromJson(json);
+                        print(cm.id);
+                        print(cm.msg);
+                        print(cm.roomId);
+                        print(cm.userId);
+                        print(cm.isMedia);
+                        _room.messages.add(cm);
+                      }
+                      //_scrollController
+                      //    .jumpTo(_scrollController.position.maxScrollExtent);
+                      return Container();
+                    },
+                  ),
+                  Container(
+                    height: _h * 0.8,
+                    child: ListView(
+                        reverse: true,
+                        controller: _scrollController,
                         shrinkWrap: true,
                         children: _room.messages
                             .map((e) => _buildChatMessageTile(e))
-                            .toList());
-                  },
-                ),
-                _buildBottomRow(),
-              ],
+                            .toList()
+                            .reversed
+                            .toList()),
+                  ),
+                  _buildBottomRow(),
+                ],
+              ),
             ),
           );
         });
   }
 
-  Row _buildBottomRow() => Row(
-        children: [
-          SizedBox(
-            height: 30,
-            child: FloatingActionButton(
-              heroTag: null,
-              onPressed: _pickFile,
-              child: Icon(Icons.add),
-            ),
-          ),
-          SizedBox(
-              width: 250,
-              child: TextField(
-                enabled: pFile == null,
-                controller: _enterMsgController,
-                decoration: InputDecoration(
-                    hintText: pFile == null ? "Enter message" : pFile!.name),
-              )),
-          _uploading
-              ? CircularProgressIndicator()
-              : IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      _enterMsgController.clear();
-                      pFile = null;
-                    });
-                  },
-                ),
-          SizedBox(
+  Container _buildBottomRow() => Container(
+        height: _h * 0.071,
+        alignment: Alignment.bottomCenter,
+        color: Theme.of(context).bottomAppBarColor,
+        padding: const EdgeInsets.all(0.0),
+        child: Row(
+          children: [
+            SizedBox(
               height: 30,
               child: FloatingActionButton(
-                  heroTag: null,
-                  onPressed: _sendMessage,
-                  child: Icon(Icons.send, size: 18)))
-        ],
+                heroTag: null,
+                onPressed: _pickFile,
+                child: Icon(Icons.add),
+              ),
+            ),
+            SizedBox(
+                width: _w * 0.6,
+                child: TextField(
+                  enabled: pFile == null,
+                  controller: _enterMsgController,
+                  decoration: InputDecoration(
+                      hintText: pFile == null ? "Enter message" : pFile!.name),
+                )),
+            _uploading
+                ? CircularProgressIndicator()
+                : IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        _enterMsgController.clear();
+                        pFile = null;
+                      });
+                    },
+                  ),
+            SizedBox(
+                height: 30,
+                child: FloatingActionButton(
+                    heroTag: null,
+                    onPressed: _sendMessage,
+                    child: Icon(Icons.send, size: 18)))
+          ],
+        ),
       );
 
   Future _sendMessage() async {
@@ -163,6 +195,7 @@ class _ChatState extends State<Chat> {
   }
 
   Widget _buildChatMessageTile(ChatMessage msg) {
+    bool isMine = msg.userId == _user!.uid;
     return Padding(
       padding: const EdgeInsets.all(2.0),
       child: ListTile(
@@ -184,9 +217,11 @@ class _ChatState extends State<Chat> {
                 },
                 icon: Icon(Icons.download))
             : SizedBox(height: 0, width: 0),
-        title: Text(msg.msg),
-        tileColor:
-            msg.userId == _user!.uid ? Colors.indigo[300] : Colors.grey[300],
+        title: Text(
+          msg.msg,
+          style: TextStyle(color: isMine ? Colors.white : Colors.black),
+        ),
+        tileColor: isMine ? PURPLE_COLOR : Colors.grey[300],
       ),
     );
   }

@@ -17,3 +17,16 @@ const textInputDecoration = InputDecoration(
     ),
   ),
 );
+
+const PURPLE_COLOR = Color(0xff505AC9);
+
+ThemeData themeData = ThemeData(
+  appBarTheme: AppBarTheme(
+      actionsIconTheme: IconThemeData(color: Colors.black),
+      backgroundColor: Colors.white,
+      titleTextStyle: TextStyle(color: Colors.black)),
+  floatingActionButtonTheme:
+      FloatingActionButtonThemeData(backgroundColor: PURPLE_COLOR),
+  bottomNavigationBarTheme:
+      BottomNavigationBarThemeData(selectedItemColor: PURPLE_COLOR),
+);

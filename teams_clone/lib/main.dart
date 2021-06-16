@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:teams_clone/screens/wrapper.dart';
 import 'package:teams_clone/services/auth.dart';
+import 'package:teams_clone/shared/constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +22,7 @@ class MyApp extends StatelessWidget {
         title: 'LocalPedia',
         debugShowCheckedModeBanner: false,
         themeMode: ThemeMode.system,
-        theme: ThemeData.light(),
-        darkTheme: ThemeData.dark(),
+        theme: themeData,
         home: Wrapper(),
       ),
     );
