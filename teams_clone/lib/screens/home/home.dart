@@ -35,6 +35,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.black),
         title: Text(_appBarTitles[_currentIndex],
             style: TextStyle(color: Colors.black, fontSize: 17)),
       ),

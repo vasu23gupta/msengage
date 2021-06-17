@@ -60,10 +60,7 @@ class _ChatHomeState extends State<ChatHome> {
   }
 
   ListTile _buildChatRoomTile(ChatRoom room) => ListTile(
-        // leading: CircleAvatar(
-        //   backgroundImage:
-        //       NetworkImage(room.imgUrl == null ? '' : room.imgUrl!),
-        // ),
+        leading: room.icon,
         title: Text(room.name),
         onTap: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => Chat(room))),

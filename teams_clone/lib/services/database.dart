@@ -70,4 +70,14 @@ class ChatDatabaseService {
     if (res.statusCode == 200) return true;
     return false;
   }
+
+  static Future<bool> changeRoomName(
+      String roomId, String uid, String name) async {
+    http.Response res = await http.patch(
+        Uri.parse(_chatUrl + "room/changeRoomName/" + roomId),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'name': name}));
+    if (res.statusCode == 200) return true;
+    return false;
+  }
 }
