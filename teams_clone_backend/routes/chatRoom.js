@@ -38,6 +38,23 @@ router.patch('/room/changeRoomName/:roomId', async (req, res) => {
   }
 });
 
+router.patch('/room/changeRoomCensorship/:roomId', async (req, res) => {
+  try {
+    const roomId = req.params.roomId;
+    const room = await ChatRoomModel.updateOne({ _id: roomId }, {
+      $set: {
+        censoring: req.body.censoring
+      }
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Operation performed successfully"
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({ success: false, error: error })
+  }
+});
+
 router.patch('/room/changeRoomIcon/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
@@ -107,6 +124,7 @@ router.patch('/room/leave/:roomId',  async (req, res) => {
       message: "Operation performed successfully"
     });
   } catch (error) {
+    console.log(error);
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
@@ -140,7 +158,7 @@ router.get('/room/:roomId', async (req, res) => {
     const users = await UserModel.getUserByIds(room.userIds);
     const options = {
       page: parseInt(req.query.page) || 0,
-      limit: parseInt(req.query.limit) || 10,
+      limit: parseInt(req.query.limit) || 100,
     };
     const conversation = await ChatMessageModel.getConversationByRoomId(roomId, options);
     return res.status(200).json({

@@ -9,6 +9,7 @@ class ChatRoom {
   List<ChatMessage> messages = [];
   List<AppUser> users = [];
   late CircleAvatar icon;
+  bool censoring = false;
 
   ChatRoom.fromHomeJson(Map<String, dynamic> json) {
     roomId = json['_id'];
@@ -21,6 +22,7 @@ class ChatRoom {
     name = json['room']['name'];
     roomId = json['room']['_id'];
     imgUrl = json['room']['imgUrl'];
+    censoring = json['room']['censoring'];
     for (var item in json['conversation'])
       messages.add(ChatMessage.fromJson(item));
 

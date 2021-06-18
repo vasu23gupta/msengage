@@ -15,6 +15,10 @@ const chatRoomSchema = new mongoose.Schema(
     name: String,
     imgUrl: String,
     imgExtn: String,
+    censoring: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -53,6 +53,20 @@ class _ChatDetailsState extends State<ChatDetails> {
                 context: context, builder: (_) => _buildChangeNameDialog()),
           ),
           ListTile(
+            leading: Icon(Icons.report_gmailerrorred_rounded),
+            title: Text("Profanity filtering"),
+            trailing: Switch(
+              onChanged: (val) async {
+                bool prev = _room.censoring;
+                setState(() => _room.censoring = val);
+                bool changed = await ChatDatabaseService.changeRoomCensorship(
+                    _room.roomId, _user!.uid, val);
+                if (!changed) setState(() => _room.censoring = prev);
+              },
+              value: _room.censoring,
+            ),
+          ),
+          ListTile(
             leading: Icon(Icons.person_remove_alt_1_outlined),
             title: Text("Leave chat"),
             onTap: () async {

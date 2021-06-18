@@ -13,6 +13,7 @@ import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:profanity_filter/profanity_filter.dart';
 
 class Chat extends StatefulWidget {
   Chat(this.room);
@@ -30,6 +31,7 @@ class _ChatState extends State<Chat> {
   late double _h;
   late double _w;
   ScrollController _scrollController = ScrollController();
+  final _filter = ProfanityFilter();
 
   @override
   void initState() {
@@ -38,7 +40,6 @@ class _ChatState extends State<Chat> {
     _room = widget.room;
     print(_room.roomId);
     socket.emit("subscribe", {"room": _room.roomId});
-    print(_room.name);
   }
 
   @override
@@ -174,6 +175,10 @@ class _ChatState extends State<Chat> {
     }
     if (msg.isNotEmpty) {
       if (task != null) await task.whenComplete(() => null);
+      if (_room.censoring) {
+        msg = _filter.censor(msg);
+        print(msg);
+      }
       res = await ChatDatabaseService.sendMessage(
           msg, _room.roomId, _user!.uid, pFile != null);
       socket.emit(

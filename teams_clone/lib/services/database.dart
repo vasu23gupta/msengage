@@ -80,4 +80,14 @@ class ChatDatabaseService {
     if (res.statusCode == 200) return true;
     return false;
   }
+
+  static Future<bool> changeRoomCensorship(
+      String roomId, String uid, bool censoring) async {
+    http.Response res = await http.patch(
+        Uri.parse(_chatUrl + "room/changeRoomCensorship/" + roomId),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'censoring': censoring}));
+    if (res.statusCode == 200) return true;
+    return false;
+  }
 }
