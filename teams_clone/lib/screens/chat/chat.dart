@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:provider/provider.dart';
@@ -28,18 +27,20 @@ class _ChatState extends State<Chat> {
   TextEditingController _enterMsgController = TextEditingController();
   PlatformFile? pFile;
   bool _uploading = false;
+  bool _loading = true;
   late double _h;
   late double _w;
   ScrollController _scrollController = ScrollController();
   final _filter = ProfanityFilter();
+  late Stream<dynamic> _chatStream;
 
   @override
   void initState() {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
     _room = widget.room;
-    print(_room.roomId);
-    socket.emit("subscribe", {"room": _room.roomId});
+    _chatStream = streamSocket.getResponse;
+    _getRoom();
   }
 
   @override
@@ -48,17 +49,19 @@ class _ChatState extends State<Chat> {
     socket.emit("unsubscribe", {"room": _room.roomId});
   }
 
+  Future _getRoom() async {
+    _room = await ChatDatabaseService.getChatRoomByRoomId(_room.roomId);
+    socket.emit("subscribe", {"room": _room.roomId});
+    setState(() => _loading = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     _h = MediaQuery.of(context).size.height;
     _w = MediaQuery.of(context).size.width;
-    return FutureBuilder(
-        future: ChatDatabaseService.getChatRoomByRoomId(_room.roomId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return Center(child: CircularProgressIndicator());
-          _room = snapshot.data as ChatRoom;
-          return Scaffold(
+    return _loading
+        ? Center(child: CircularProgressIndicator())
+        : Scaffold(
             appBar: AppBar(
               iconTheme: IconThemeData(color: Colors.black),
               title: TextButton(
@@ -73,7 +76,7 @@ class _ChatState extends State<Chat> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   StreamBuilder(
-                    stream: streamSocket.getResponse,
+                    stream: _chatStream,
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       if (snapshot.hasData) {
                         print("snapshot data: " + snapshot.data.toString());
@@ -86,31 +89,28 @@ class _ChatState extends State<Chat> {
                         print(cm.roomId);
                         print(cm.userId);
                         print(cm.isMedia);
-                        _room.messages.add(cm);
+                        if (_room.messages.last.id != cm.id)
+                          _room.messages.add(cm);
                       }
-                      //_scrollController
-                      //    .jumpTo(_scrollController.position.maxScrollExtent);
-                      return Container();
+                      return Container(
+                        height: _h * 0.8,
+                        child: ListView(
+                            reverse: true,
+                            controller: _scrollController,
+                            shrinkWrap: true,
+                            children: _room.messages
+                                .map((e) => _buildChatMessageTile(e))
+                                .toList()
+                                .reversed
+                                .toList()),
+                      );
                     },
-                  ),
-                  Container(
-                    height: _h * 0.8,
-                    child: ListView(
-                        reverse: true,
-                        controller: _scrollController,
-                        shrinkWrap: true,
-                        children: _room.messages
-                            .map((e) => _buildChatMessageTile(e))
-                            .toList()
-                            .reversed
-                            .toList()),
                   ),
                   _buildBottomRow(),
                 ],
               ),
             ),
           );
-        });
   }
 
   Container _buildBottomRow() => Container(
@@ -141,10 +141,8 @@ class _ChatState extends State<Chat> {
                 : IconButton(
                     icon: Icon(Icons.close),
                     onPressed: () {
-                      setState(() {
-                        _enterMsgController.clear();
-                        pFile = null;
-                      });
+                      _enterMsgController.clear();
+                      if (pFile != null) setState(() => pFile = null);
                     },
                   ),
             SizedBox(
@@ -161,40 +159,24 @@ class _ChatState extends State<Chat> {
     String msg = _enterMsgController.text;
     msg = msg.trim();
     Response res;
-    UploadTask? task;
     if (pFile != null) {
       msg = pFile!.name;
-      task = FirebaseStorage.instance
-          .ref()
-          .child(_room.roomId)
-          .child(pFile!.name)
-          .putFile(File(pFile!.path!));
-      setState(() => _uploading = true);
-      await task.whenComplete(() => null);
-      setState(() => _uploading = false);
+      print(msg);
+      // task = FirebaseStorage.instance
+      //     .ref()
+      //     .child(_room.roomId)
+      //     .child(pFile!.name)
+      //     .putFile(File(pFile!.path!));
     }
     if (msg.isNotEmpty) {
-      if (task != null) await task.whenComplete(() => null);
-      if (_room.censoring) {
-        msg = _filter.censor(msg);
-        print(msg);
-      }
+      if (_room.censoring) msg = _filter.censor(msg);
+
       res = await ChatDatabaseService.sendMessage(
           msg, _room.roomId, _user!.uid, pFile != null);
-      socket.emit(
-        "new message",
-        jsonEncode({
-          'room': _room.roomId,
-          'message': msg,
-          'postedByUser': _user!.uid,
-          'isMedia': pFile != null,
-        }),
-      );
+
       if (res.statusCode == 200) {
-        setState(() {
-          _enterMsgController.clear();
-          pFile = null;
-        });
+        _enterMsgController.clear();
+        if (pFile != null) setState(() => pFile = null);
       }
     }
   }
@@ -208,16 +190,12 @@ class _ChatState extends State<Chat> {
             ? IconButton(
                 onPressed: () async {
                   if (msg.isMedia) {
-                    String url = await FirebaseStorage.instance
-                        .ref()
-                        .child(_room.roomId)
-                        .child(msg.msg)
-                        .getDownloadURL();
-                    await launch(url);
-                    if (await canLaunch(url))
-                      await launch(url);
-                    else
-                      print(url);
+                    // String url = await FirebaseStorage.instance
+                    //     .ref()
+                    //     .child(_room.roomId)
+                    //     .child(msg.msg)
+                    //     .getDownloadURL();
+                    // await launch(url);
                   }
                 },
                 icon: Icon(Icons.download))
@@ -233,10 +211,7 @@ class _ChatState extends State<Chat> {
 
   Future<void> _pickFile() async {
     FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();
-    if (pickedFile != null)
-      setState(() {
-        pFile = pickedFile.files.first;
-        _enterMsgController.clear();
-      });
+    _enterMsgController.clear();
+    if (pickedFile != null) setState(() => pFile = pickedFile.files.first);
   }
 }

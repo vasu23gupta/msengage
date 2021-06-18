@@ -1,1 +1,2 @@
 different chat icon in chat details.
+adding msg to list in chat, problem when opening/closing keyboard cuz streambuilder.

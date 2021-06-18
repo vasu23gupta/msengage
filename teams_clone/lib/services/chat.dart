@@ -21,10 +21,9 @@ Socket socket = io(URL, <String, dynamic>{
 });
 
 //STEP2: Add this function in main function in main.dart file and add incoming data to the stream
-void connectAndListen(String uid) {
+void connectAndListen() {
   socket.onConnect((_) {
     print('connected chat');
-    socket.emit("identity", {"userId": uid});
   });
 
   socket.onConnectError((data) => print("onConnectError: " + data.toString()));

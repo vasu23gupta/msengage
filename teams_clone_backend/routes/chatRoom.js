@@ -13,7 +13,7 @@ router.post('/room/message/:roomId', async (req, res) => {
     const isMedia = req.body.isMedia;
     const currentLoggedUser = req.get('authorisation');
     const post = await ChatMessageModel.createPostInChatRoom(roomId, messageText, currentLoggedUser, isMedia);
-    global.io.sockets.emit('new message', { message: post });
+    global.io.sockets.in(roomId).emit('new message', { message: post });
     return res.status(200).json({ success: true, post: post });
   } catch (error) {
     console.log(error);

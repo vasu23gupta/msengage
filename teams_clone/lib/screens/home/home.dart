@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/screens/chat/chat_home.dart';
 import 'package:teams_clone/screens/meet/meet.dart';
 import 'package:teams_clone/services/auth.dart';
@@ -17,11 +18,14 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
+    _appUser = AppUser.fromFirebaseUser(_user!);
   }
 
   int _currentIndex = 1;
   late User? _user;
   List<String> _appBarTitles = ['Feed', 'Chat', 'Meet Now', 'More'];
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  late AppUser _appUser;
 
   void _onPageChanged(int index) {
     if (index == 3) {
@@ -34,14 +38,25 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: _appUser.icon,
+          onPressed: () => _scaffoldKey.currentState!.openDrawer(),
+        ),
         title: Text(_appBarTitles[_currentIndex],
             style: TextStyle(color: Colors.black, fontSize: 17)),
       ),
       drawer: Drawer(
         child: ListView(
           children: <Widget>[
+            ListTile(
+              leading: _appUser.icon,
+              title: Text(_user!.displayName!),
+              trailing: Icon(Icons.navigate_next),
+              onTap: () {},
+            ),
             ListTile(
                 title: Text('Logout'),
                 onTap: () async => await AuthService.signOut()),

@@ -23,7 +23,7 @@ class _ChatHomeState extends State<ChatHome> {
   void initState() {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
-    connectAndListen(_user!.uid);
+    connectAndListen();
   }
 
   User? _user;

@@ -56,6 +56,7 @@ class _ChatDetailsState extends State<ChatDetails> {
             leading: Icon(Icons.report_gmailerrorred_rounded),
             title: Text("Profanity filtering"),
             trailing: Switch(
+              activeColor: PURPLE_COLOR,
               onChanged: (val) async {
                 bool prev = _room.censoring;
                 setState(() => _room.censoring = val);
