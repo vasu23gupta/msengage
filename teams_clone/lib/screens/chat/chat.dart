@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,10 +7,10 @@ import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat_details.dart';
+import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:profanity_filter/profanity_filter.dart';
 
 class Chat extends StatefulWidget {
@@ -61,57 +60,88 @@ class _ChatState extends State<Chat> {
     _w = MediaQuery.of(context).size.width;
     return _loading
         ? Center(child: CircularProgressIndicator())
-        : Scaffold(
-            appBar: AppBar(
-              iconTheme: IconThemeData(color: Colors.black),
-              title: TextButton(
-                child: Text(_room.name,
-                    style: TextStyle(color: Colors.black, fontSize: 17)),
-                onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => ChatDetails(_room))),
-              ),
-            ),
-            body: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+        : DefaultTabController(
+            length: 2,
+            child: Scaffold(
+              appBar: _buildAppBar(),
+              body: TabBarView(
                 children: [
-                  StreamBuilder(
-                    stream: _chatStream,
-                    builder: (BuildContext context, AsyncSnapshot snapshot) {
-                      if (snapshot.hasData) {
-                        print("snapshot data: " + snapshot.data.toString());
-                        var json =
-                            jsonDecode(jsonEncode(snapshot.data))['message'];
-                        print(json);
-                        ChatMessage cm = ChatMessage.fromJson(json);
-                        print(cm.id);
-                        print(cm.msg);
-                        print(cm.roomId);
-                        print(cm.userId);
-                        print(cm.isMedia);
-                        if (_room.messages.last.id != cm.id)
-                          _room.messages.add(cm);
-                      }
-                      return Container(
-                        height: _h * 0.8,
-                        child: ListView(
-                            reverse: true,
-                            controller: _scrollController,
-                            shrinkWrap: true,
-                            children: _room.messages
-                                .map((e) => _buildChatMessageTile(e))
-                                .toList()
-                                .reversed
-                                .toList()),
-                      );
-                    },
+                  _buildChatTab(),
+                  ListView(
+                    children: <Widget>[
+                      ListTile(
+                        leading:
+                            Icon(Icons.calendar_today, color: PURPLE_COLOR),
+                        title: Text("Add an event"),
+                        onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => Calendar(room: _room))),
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.info),
+                        title: Text("Chat details"),
+                        onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => ChatDetails(_room))),
+                      ),
+                    ],
                   ),
-                  _buildBottomRow(),
                 ],
               ),
             ),
           );
   }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      iconTheme: IconThemeData(color: Colors.black),
+      title: TextButton(
+        child: Text(_room.name,
+            style: TextStyle(color: Colors.black, fontSize: 17)),
+        onPressed: () => Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => ChatDetails(_room))),
+      ),
+      bottom: TabBar(
+        labelColor: PURPLE_COLOR,
+        labelStyle: TextStyle(fontWeight: FontWeight.bold),
+        indicatorColor: PURPLE_COLOR,
+        unselectedLabelColor: Colors.black,
+        tabs: [
+          Tab(text: "CHAT"),
+          Tab(text: "DASHBOARD"),
+        ],
+      ),
+    );
+  }
+
+  ListView _buildChatTab() => ListView(
+        reverse: true,
+        children: [
+          _buildBottomRow(),
+          StreamBuilder(
+            stream: _chatStream,
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if (snapshot.hasData) {
+                var json = jsonDecode(jsonEncode(snapshot.data))['message'];
+                ChatMessage cm = ChatMessage.fromJson(json);
+                if (_room.messages.last.id != cm.id) _room.messages.add(cm);
+              }
+              return Container(
+                height: _h * 0.8,
+                child: ListView(
+                    reverse: true,
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    children: _room.messages
+                        .map((e) => _buildChatMessageTile(e))
+                        .toList()
+                        .reversed
+                        .toList()),
+              );
+            },
+          ),
+        ],
+      );
 
   Container _buildBottomRow() => Container(
         height: _h * 0.071,
@@ -155,7 +185,7 @@ class _ChatState extends State<Chat> {
         ),
       );
 
-  Future _sendMessage() async {
+  Future<void> _sendMessage() async {
     String msg = _enterMsgController.text;
     msg = msg.trim();
     Response res;

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
-import 'package:teams_clone/screens/home/home.dart';
+import 'package:teams_clone/screens/home.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';

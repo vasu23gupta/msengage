@@ -19,6 +19,10 @@ const chatRoomSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    events:{
+      type: [String],
+      required: true
+    }
   },
   {
     timestamps: true,

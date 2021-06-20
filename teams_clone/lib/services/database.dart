@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 
 const String URL = "http://10.0.2.2:3000/";
@@ -89,5 +90,39 @@ class ChatDatabaseService {
         body: jsonEncode({'censoring': censoring}));
     if (res.statusCode == 200) return true;
     return false;
+  }
+}
+
+class CalendarDatabaseService {
+  static String _eventsUrl = URL + "events/";
+
+  static Future<bool> createEvent(DateTime start, DateTime end, String title,
+      String uid, String roomId) async {
+    var body = jsonEncode({
+      'title': title,
+      'startTime': start.toString(),
+      'endTime': end.toString(),
+      'createdBy': uid,
+      'roomId': roomId
+    });
+    http.Response res = await http.post(
+      Uri.parse(_eventsUrl),
+      body: body,
+      headers: {'Content-Type': 'application/json'},
+    );
+    return res.statusCode == 200;
+  }
+
+  static Future<CalendarEvent> getEventFromEventId(String eventId) async {
+    http.Response res = await http.get(Uri.parse(_eventsUrl + eventId));
+    return CalendarEvent.fromJson(jsonDecode(res.body));
+  }
+
+  static Future<List<CalendarEvent>> getEventFromUserId(String uid) async {
+    http.Response res = await http.get(Uri.parse(_eventsUrl + "user/" + uid));
+    List<CalendarEvent> result = [];
+    var body = jsonDecode(res.body);
+    for (var item in body) result.add(CalendarEvent.fromJson(item));
+    return result;
   }
 }

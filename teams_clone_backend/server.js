@@ -26,6 +26,8 @@ app.use('/chat', chatRoute);
 const usersRoute = require('./routes/users');
 app.use('/users', usersRoute);
 
+const eventsRoute = require('./routes/events');
+app.use('/events', eventsRoute);
 
 //db
 async function connectDB() {

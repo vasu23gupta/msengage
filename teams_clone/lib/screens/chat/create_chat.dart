@@ -24,8 +24,6 @@ class _CreateChatState extends State<CreateChat> {
   void initState() {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
-    ChatDatabaseService.getChatRooms(_user!.uid)
-        .then((value) => print(value.body));
   }
 
   Iterable<Widget> get _tagWidgets sync* {

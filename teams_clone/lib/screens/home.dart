@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/screens/chat/chat_home.dart';
 import 'package:teams_clone/screens/meet/meet.dart';
+import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/services/auth.dart';
 
 class Home extends StatefulWidget {
@@ -29,10 +30,35 @@ class _HomeState extends State<Home> {
 
   void _onPageChanged(int index) {
     if (index == 3) {
-      //show sheet
+      showModalBottomSheet(
+          context: context,
+          builder: (context) {
+            return Wrap(
+              children: <Widget>[_buildCalendarButton()],
+            );
+          });
     } else {
       setState(() => _currentIndex = index);
     }
+  }
+
+  Padding _buildCalendarButton() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Container(
+            height: 50,
+            width: 50,
+            child: ElevatedButton(
+                onPressed: () => Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => Calendar())),
+                child: Icon(Icons.calendar_today)),
+          ),
+          Text("Calendar")
+        ],
+      ),
+    );
   }
 
   @override

@@ -204,31 +204,31 @@ router.get('/', async (req, res) => {
   }
 });
 
-//rooms a third person is in
-router.get('/getRoomsByUserId/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const currentLoggedUser = req.get('authorisation');
-    const rooms = await ChatRoomModel.getChatRoomsByUserId(userId);
-    rooms.forEach(element => {
-      if (element.userIds.includes(currentLoggedUser)) element["joined"] = true;
-      else element["joined"] = false;
-    });
-    return res.status(200).json({ success: true, conversation: rooms });
-  } catch (error) {
-    return res.status(error.status || 500).json({ success: false, error: error })
-  }
-});
+// //rooms a third person is in
+// router.get('/getRoomsByUserId/:userId', async (req, res) => {
+//   try {
+//     const userId = req.params.userId;
+//     const currentLoggedUser = req.get('authorisation');
+//     const rooms = await ChatRoomModel.getChatRoomsByUserId(userId);
+//     rooms.forEach(element => {
+//       if (element.userIds.includes(currentLoggedUser)) element["joined"] = true;
+//       else element["joined"] = false;
+//     });
+//     return res.status(200).json({ success: true, conversation: rooms });
+//   } catch (error) {
+//     return res.status(error.status || 500).json({ success: false, error: error })
+//   }
+// });
 
-//created by me
-router.get('/myChannels', async (req, res) => {
-  try {
-    const currentLoggedUser = req.get('authorisation');
-    const rooms = await ChatRoomModel.find({ chatInitiator: currentLoggedUser });
-    return res.status(200).json({ success: true, conversation: rooms });
-  } catch (error) {
-    return res.status(error.status || 500).json({ success: false, error: error })
-  }
-});
+// //created by me
+// router.get('/myChannels', async (req, res) => {
+//   try {
+//     const currentLoggedUser = req.get('authorisation');
+//     const rooms = await ChatRoomModel.find({ chatInitiator: currentLoggedUser });
+//     return res.status(200).json({ success: true, conversation: rooms });
+//   } catch (error) {
+//     return res.status(error.status || 500).json({ success: false, error: error })
+//   }
+// });
 
 module.exports = router;
