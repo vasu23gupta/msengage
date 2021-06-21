@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/services/database.dart';
@@ -47,7 +48,7 @@ class _CreateEventState extends State<CreateEvent> {
         actions: <Widget>[
           IconButton(
               onPressed: () async {
-                bool done = await CalendarDatabaseService.createEvent(
+                CalendarEvent event = await CalendarDatabaseService.createEvent(
                     DateTime(_startDate.year, _startDate.month, _startDate.day,
                         _startTime.hour, _startTime.minute),
                     DateTime(_endDate.year, _endDate.month, _endDate.day,
@@ -55,12 +56,14 @@ class _CreateEventState extends State<CreateEvent> {
                     _titleController.text,
                     _user!.uid,
                     _room == null ? "" : _room!.roomId);
-                if (done) {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => Calendar(room: _room)));
+                if (_room != null) {
+                  _room!.eventIds.add(event.id);
+                  _room!.events.add(event);
                 }
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => Calendar(room: _room)));
               },
               icon: Icon(Icons.check))
         ],
@@ -92,19 +95,23 @@ class _CreateEventState extends State<CreateEvent> {
               firstDate: _nowDate,
               lastDate: _nowDate.add(Duration(days: 1825)), // 5*365 ~ 5years
             ))!;
+            if (_startDate.isAfter(_endDate))
+              _endDate = DateTime.parse(_startDate.toString());
             setState(() {});
           },
           child: Text(
-            "${DAYS[_startDate.weekday - 1]}, ${_startDate.day} ${MONTHS[_startDate.month - 1]} ${_startDate.year}",
+            "${DAYS_3CHAR[_startDate.weekday - 1]}, ${_startDate.day} ${MONTHS_3CHAR[_startDate.month - 1]} ${_startDate.year}",
             style: TextStyle(color: Colors.black),
           ),
         ),
         trailing: TextButton(
           onPressed: () async {
             _startTime = (await showTimePicker(
-              context: context,
-              initialTime: _nowTime,
-            ))!;
+                context: context, initialTime: _nowTime))!;
+            if (!_endDate.isAfter(_startDate) &&
+                _timeOfDayToDouble(_startTime) > _timeOfDayToDouble(_endTime))
+              _endTime =
+                  TimeOfDay(hour: _startTime.hour, minute: _startTime.minute);
             setState(() {});
           },
           child: Text(
@@ -128,16 +135,18 @@ class _CreateEventState extends State<CreateEvent> {
             setState(() {});
           },
           child: Text(
-            "${DAYS[_endDate.weekday - 1]}, ${_endDate.day} ${MONTHS[_endDate.month - 1]} ${_endDate.year}",
+            "${DAYS_3CHAR[_endDate.weekday - 1]}, ${_endDate.day} ${MONTHS_3CHAR[_endDate.month - 1]} ${_endDate.year}",
             style: TextStyle(color: Colors.black),
           ),
         ),
         trailing: TextButton(
           onPressed: () async {
             _endTime = (await showTimePicker(
-              context: context,
-              initialTime: _nowTime,
-            ))!;
+                context: context, initialTime: _nowTime))!;
+            if (!_endDate.isAfter(_startDate) &&
+                _timeOfDayToDouble(_startTime) > _timeOfDayToDouble(_endTime))
+              _endTime =
+                  TimeOfDay(hour: _startTime.hour, minute: _startTime.minute);
             setState(() {});
           },
           child: Text(
@@ -146,4 +155,7 @@ class _CreateEventState extends State<CreateEvent> {
           ),
         ),
       );
+
+  double _timeOfDayToDouble(TimeOfDay myTime) =>
+      myTime.hour + myTime.minute / 60.0;
 }

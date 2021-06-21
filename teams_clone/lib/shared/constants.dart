@@ -31,8 +31,16 @@ ThemeData themeData = ThemeData(
       BottomNavigationBarThemeData(selectedItemColor: PURPLE_COLOR),
 );
 
-const List<String> DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const List<String> MONTHS = [
+const List<String> DAYS_3CHAR = [
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+  "Sun"
+];
+const List<String> MONTHS_3CHAR = [
   "Jan",
   "Feb",
   "Mar",
@@ -45,4 +53,19 @@ const List<String> MONTHS = [
   "Oct",
   "Nov",
   "Dec"
+];
+
+const List<String> MONTHS_FULL = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
 ];

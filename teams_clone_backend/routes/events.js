@@ -67,13 +67,25 @@ router.get('/user/:userId', async (req, res) => {
         const userEvents = await Event.find({ createdBy: req.params.userId });
         for (let i = 0; i < userEvents.length; i++) {
             var doc = userEvents[i];
-            if (events.some( e => !e['_id'].equals(doc['_id'] ))) {
+            if (events.some(e => e['_id'].equals(doc['_id']))) {
                 /* events already contains this doc */
-                events.push(doc);   
+                //events.push(doc);
             }
+            else events.push(doc);
         }
         res.json(events);
     } catch (err) {
+        res.json({ message: err });
+    }
+});
+
+router.delete('/:eventId', async (req, res) => {
+    try {
+        await ChatRoom.updateOne({ events: { $in: req.params.eventId } }, {$pull: {events: req.params.eventId}});
+        const event = await Event.findByIdAndDelete(req.params.eventId);
+        res.json(event);
+    } catch (err) {
+        console.log(err);
         res.json({ message: err });
     }
 });

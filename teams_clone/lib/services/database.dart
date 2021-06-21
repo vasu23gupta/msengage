@@ -96,8 +96,8 @@ class ChatDatabaseService {
 class CalendarDatabaseService {
   static String _eventsUrl = URL + "events/";
 
-  static Future<bool> createEvent(DateTime start, DateTime end, String title,
-      String uid, String roomId) async {
+  static Future<CalendarEvent> createEvent(DateTime start, DateTime end,
+      String title, String uid, String roomId) async {
     var body = jsonEncode({
       'title': title,
       'startTime': start.toString(),
@@ -110,7 +110,7 @@ class CalendarDatabaseService {
       body: body,
       headers: {'Content-Type': 'application/json'},
     );
-    return res.statusCode == 200;
+    return CalendarEvent.fromJson(jsonDecode(res.body));
   }
 
   static Future<CalendarEvent> getEventFromEventId(String eventId) async {
@@ -124,5 +124,11 @@ class CalendarDatabaseService {
     var body = jsonDecode(res.body);
     for (var item in body) result.add(CalendarEvent.fromJson(item));
     return result;
+  }
+
+  static Future<bool> deleteEventFromEventId(String eventId) async {
+    http.Response res = await http.delete(Uri.parse(_eventsUrl + eventId));
+    print(res.body);
+    return res.statusCode == 200;
   }
 }
