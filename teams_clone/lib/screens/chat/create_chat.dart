@@ -48,7 +48,6 @@ class _CreateChatState extends State<CreateChat> {
             onPressed: () async {
               String? roomId = await ChatDatabaseService.createNewChatRoom(
                   _emailsAndIds.values.toList(), "New Chat", _user!.uid);
-              print(roomId);
               if (roomId != null)
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => Chat(ChatRoom(roomId: roomId))));

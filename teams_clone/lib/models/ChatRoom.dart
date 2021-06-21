@@ -22,7 +22,6 @@ class ChatRoom {
   }
 
   ChatRoom.fromJsonWithMessages(Map<String, dynamic> json) {
-    print(json['room']['events']);
     name = json['room']['name'];
     roomId = json['room']['_id'];
     imgUrl = json['room']['imgUrl'];

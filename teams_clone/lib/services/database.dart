@@ -128,7 +128,6 @@ class CalendarDatabaseService {
 
   static Future<bool> deleteEventFromEventId(String eventId) async {
     http.Response res = await http.delete(Uri.parse(_eventsUrl + eventId));
-    print(res.body);
     return res.statusCode == 200;
   }
 }

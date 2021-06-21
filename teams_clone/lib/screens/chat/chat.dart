@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +14,7 @@ import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
 import 'package:profanity_filter/profanity_filter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Chat extends StatefulWidget {
   Chat(this.room);
@@ -172,7 +175,8 @@ class _ChatState extends State<Chat> {
                     icon: Icon(Icons.close),
                     onPressed: () {
                       _enterMsgController.clear();
-                      if (pFile != null) setState(() => pFile = null);
+                      if (pFile != null && !_uploading)
+                        setState(() => pFile = null);
                     },
                   ),
             SizedBox(
@@ -191,12 +195,14 @@ class _ChatState extends State<Chat> {
     Response res;
     if (pFile != null) {
       msg = pFile!.name;
-      print(msg);
-      // task = FirebaseStorage.instance
-      //     .ref()
-      //     .child(_room.roomId)
-      //     .child(pFile!.name)
-      //     .putFile(File(pFile!.path!));
+      _uploading = true;
+      UploadTask? task = FirebaseStorage.instance
+          .ref()
+          .child(_room.roomId)
+          .child(pFile!.name)
+          .putFile(File(pFile!.path!));
+      await task.then((TaskSnapshot snapshot) {});
+      _uploading = false;
     }
     if (msg.isNotEmpty) {
       if (_room.censoring) msg = _filter.censor(msg);
@@ -220,12 +226,12 @@ class _ChatState extends State<Chat> {
             ? IconButton(
                 onPressed: () async {
                   if (msg.isMedia) {
-                    // String url = await FirebaseStorage.instance
-                    //     .ref()
-                    //     .child(_room.roomId)
-                    //     .child(msg.msg)
-                    //     .getDownloadURL();
-                    // await launch(url);
+                    String url = await FirebaseStorage.instance
+                        .ref()
+                        .child(_room.roomId)
+                        .child(msg.msg)
+                        .getDownloadURL();
+                    await launch(url);
                   }
                 },
                 icon: Icon(Icons.download))

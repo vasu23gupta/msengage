@@ -36,6 +36,7 @@ dependencies:
   url_launcher:
   profanity_filter: ^2.0.0-nullsafety.0
   table_calendar:
+  firebase_storage:
 
 dev_dependencies:
   flutter_test:
