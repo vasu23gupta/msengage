@@ -27,10 +27,14 @@ class UserDBService {
 class ChatDatabaseService {
   static String _chatUrl = URL + "chat/";
 
-  static Future<http.Response> getChatRooms(String uid) async {
+  static Future<List<ChatRoom>> getChatRooms(String uid) async {
     http.Response res =
         await http.get(Uri.parse(_chatUrl), headers: {'authorisation': uid});
-    return res;
+    var body = jsonDecode(res.body);
+    List<ChatRoom> _rooms = [];
+    for (var json in body['conversation'])
+      _rooms.add(ChatRoom.fromHomeJson(json));
+    return _rooms;
   }
 
   static Future<String?> createNewChatRoom(

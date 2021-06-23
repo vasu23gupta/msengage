@@ -87,13 +87,11 @@ class _ChatDetailsState extends State<ChatDetails> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          ListView.builder(
+          ListView(
             shrinkWrap: true,
-            itemCount: _room.users.length,
-            itemBuilder: (context, index) => ListTile(
-              leading: _room.users[index].icon,
-              title: Text(_room.users[index].name),
-            ),
+            children: _room.users.values
+                .map((e) => ListTile(leading: e.icon, title: Text(e.name)))
+                .toList(),
           )
         ],
       ),

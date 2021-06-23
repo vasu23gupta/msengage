@@ -35,6 +35,7 @@ class _ChatState extends State<Chat> {
   ScrollController _scrollController = ScrollController();
   final _filter = ProfanityFilter();
   late Stream<dynamic> _chatStream;
+  String _lastMsgBy = '';
 
   @override
   void initState() {
@@ -147,44 +148,49 @@ class _ChatState extends State<Chat> {
       );
 
   Container _buildBottomRow() => Container(
-        height: _h * 0.071,
+        height: _h * 0.08,
         alignment: Alignment.bottomCenter,
         color: Theme.of(context).bottomAppBarColor,
-        padding: const EdgeInsets.all(0.0),
+        padding: const EdgeInsets.only(bottom: 10, top: 10),
         child: Row(
           children: [
-            SizedBox(
-              height: 30,
-              child: FloatingActionButton(
-                heroTag: null,
-                onPressed: _pickFile,
-                child: Icon(Icons.add),
+            ElevatedButton(
+              onPressed: _pickFile,
+              child: Icon(Icons.add, size: 20),
+              style: ElevatedButton.styleFrom(
+                shape: CircleBorder(),
+                primary: PURPLE_COLOR,
+                minimumSize: Size(25, 25),
               ),
             ),
             SizedBox(
-                width: _w * 0.6,
-                child: TextField(
-                  enabled: pFile == null,
-                  controller: _enterMsgController,
-                  decoration: InputDecoration(
-                      hintText: pFile == null ? "Enter message" : pFile!.name),
-                )),
-            _uploading
-                ? CircularProgressIndicator()
-                : IconButton(
-                    icon: Icon(Icons.close),
-                    onPressed: () {
-                      _enterMsgController.clear();
-                      if (pFile != null && !_uploading)
-                        setState(() => pFile = null);
-                    },
-                  ),
-            SizedBox(
-                height: 30,
-                child: FloatingActionButton(
-                    heroTag: null,
-                    onPressed: _sendMessage,
-                    child: Icon(Icons.send, size: 18)))
+              width: _w * 0.75,
+              child: TextField(
+                enabled: pFile == null,
+                controller: _enterMsgController,
+                decoration: InputDecoration(
+                    suffixIcon: _uploading
+                        ? CircularProgressIndicator()
+                        : IconButton(
+                            icon: Icon(Icons.close, color: Colors.black),
+                            onPressed: () {
+                              _enterMsgController.clear();
+                              if (pFile != null && !_uploading)
+                                setState(() => pFile = null);
+                            },
+                          ),
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey)),
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey)),
+                    hintText: pFile == null ? "Enter message" : pFile!.name),
+              ),
+            ),
+            IconButton(
+              onPressed: _sendMessage,
+              icon: Icon(Icons.send),
+              color: PURPLE_COLOR,
+            )
           ],
         ),
       );
@@ -217,32 +223,104 @@ class _ChatState extends State<Chat> {
     }
   }
 
-  Widget _buildChatMessageTile(ChatMessage msg) {
-    bool isMine = msg.userId == _user!.uid;
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: ListTile(
-        trailing: msg.isMedia
-            ? IconButton(
+  Widget _buildChatMessageTile(ChatMessage msg) =>
+      msg.userId == _user!.uid ? _buildMyMsgTile(msg) : _buildOtherMsgTile(msg);
+
+  Widget _buildMyMsgTile(ChatMessage msg) {
+    Widget res = Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: _w * 0.8),
+        decoration: BoxDecoration(
+            color: PURPLE_COLOR,
+            borderRadius: BorderRadius.all(Radius.circular(5))),
+        margin: const EdgeInsets.fromLTRB(2, 2, 8, 2),
+        padding: const EdgeInsets.all(6.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (msg.isMedia)
+              IconButton(
                 onPressed: () async {
-                  if (msg.isMedia) {
-                    String url = await FirebaseStorage.instance
+                  if (msg.isMedia)
+                    await launch(await FirebaseStorage.instance
                         .ref()
                         .child(_room.roomId)
                         .child(msg.msg)
-                        .getDownloadURL();
-                    await launch(url);
-                  }
+                        .getDownloadURL());
                 },
-                icon: Icon(Icons.download))
-            : SizedBox(height: 0, width: 0),
-        title: Text(
-          msg.msg,
-          style: TextStyle(color: isMine ? Colors.white : Colors.black),
+                icon: Icon(Icons.download),
+              ),
+            Flexible(
+              child: Text(
+                msg.msg,
+                style: TextStyle(color: Colors.white, fontSize: _w * 0.045),
+              ),
+            ),
+          ],
         ),
-        tileColor: isMine ? PURPLE_COLOR : Colors.grey[300],
       ),
     );
+    _lastMsgBy = msg.userId;
+    return res;
+  }
+
+  Widget _buildOtherMsgTile(ChatMessage msg) {
+    Widget res = Container(
+      alignment: Alignment.centerLeft,
+      margin: _lastMsgBy == msg.userId
+          ? EdgeInsets.only(left: 6)
+          : EdgeInsets.fromLTRB(6, 6, 6, 0),
+      child: Row(
+        children: [
+          _lastMsgBy == msg.userId
+              ? Container(width: 40)
+              : _room.users[msg.userId]!.icon,
+          Container(
+            constraints: BoxConstraints(maxWidth: _w * 0.8),
+            decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.all(Radius.circular(5))),
+            margin: const EdgeInsets.fromLTRB(4, 2, 2, 2),
+            padding: const EdgeInsets.all(6.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _lastMsgBy == msg.userId
+                    ? Container(width: 0)
+                    : Text(_room.users[msg.userId]!.name),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        msg.msg,
+                        style: TextStyle(
+                            color: Colors.black, fontSize: _w * 0.045),
+                      ),
+                    ),
+                    if (msg.isMedia)
+                      IconButton(
+                        onPressed: () async {
+                          if (msg.isMedia)
+                            await launch(await FirebaseStorage.instance
+                                .ref()
+                                .child(_room.roomId)
+                                .child(msg.msg)
+                                .getDownloadURL());
+                        },
+                        icon: Icon(Icons.download),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    _lastMsgBy = msg.userId;
+    return res;
   }
 
   Future<void> _pickFile() async {

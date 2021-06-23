@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
 import 'package:teams_clone/screens/chat/create_chat.dart';
+import 'package:teams_clone/screens/search.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 
@@ -31,6 +32,25 @@ class _ChatHomeState extends State<ChatHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: null,
+        automaticallyImplyLeading: false,
+        titleSpacing: 6,
+        title: GestureDetector(
+          onTap: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => Search())),
+          child: TextField(
+            enabled: false,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              prefixIcon: Icon(Icons.search),
+              hintText: "Search",
+              fillColor: Colors.grey[200],
+              filled: true,
+            ),
+          ),
+        ),
+      ),
       body: _buildScaffold(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context)
@@ -44,13 +64,10 @@ class _ChatHomeState extends State<ChatHome> {
     return FutureBuilder(
       future: ChatDatabaseService.getChatRooms(_user!.uid),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return CircularProgressIndicator();
+        if (!snapshot.hasData)
+          return Center(child: CircularProgressIndicator());
 
-        Response res = snapshot.data as Response;
-        var body = jsonDecode(res.body);
-        _rooms.clear();
-        for (var json in body['conversation'])
-          _rooms.add(ChatRoom.fromHomeJson(json));
+        _rooms = snapshot.data as List<ChatRoom>;
         return ListView.builder(
           itemCount: _rooms.length,
           itemBuilder: (context, index) => _buildChatRoomTile(_rooms[index]),

@@ -5,6 +5,7 @@ import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/screens/chat/chat_home.dart';
 import 'package:teams_clone/screens/meet/meet.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
+import 'package:teams_clone/screens/profile.dart';
 import 'package:teams_clone/services/auth.dart';
 
 class Home extends StatefulWidget {
@@ -73,6 +74,7 @@ class _HomeState extends State<Home> {
         ),
         title: Text(_appBarTitles[_currentIndex],
             style: TextStyle(color: Colors.black, fontSize: 17)),
+        elevation: 0,
       ),
       drawer: Drawer(
         child: ListView(
@@ -81,7 +83,8 @@ class _HomeState extends State<Home> {
               leading: _appUser.icon,
               title: Text(_user!.displayName!),
               trailing: Icon(Icons.navigate_next),
-              onTap: () {},
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => Profile(appUser: _appUser))),
             ),
             ListTile(
                 title: Text('Logout'),
@@ -104,7 +107,6 @@ class _HomeState extends State<Home> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        //selectedItemColor: Colors.blueAccent,
         unselectedItemColor: Colors.grey,
         onTap: _onPageChanged,
         type: BottomNavigationBarType.fixed,

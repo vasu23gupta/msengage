@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
@@ -10,7 +12,7 @@ class ChatRoom {
   List<ChatMessage> messages = [];
   List<String> eventIds = [];
   List<CalendarEvent> events = [];
-  List<AppUser> users = [];
+  HashMap<String, AppUser> users = HashMap();
   late CircleAvatar icon;
   bool censoring = false;
 
@@ -29,7 +31,7 @@ class ChatRoom {
     for (var item in json['conversation'])
       messages.add(ChatMessage.fromJson(item));
 
-    for (var item in json['users']) users.add(AppUser.fromJson(item));
+    for (var item in json['users']) users[item['_id']] = AppUser.fromJson(item);
 
     for (String item in json['room']['events']) eventIds.add(item);
     icon = _makeIcon();

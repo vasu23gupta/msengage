@@ -68,7 +68,9 @@ class _CreateChatState extends State<CreateChat> {
             child: ElevatedButton(
               onPressed: () async {
                 String email = _addEmailController.text;
-                if (email.isNotEmpty && !_emails.contains(email)) {
+                if (email.isNotEmpty &&
+                    !_emails.contains(email) &&
+                    _user!.email != email) {
                   String? id = await UserDBService.getUserIdFromEmail(email);
                   if (id != null) {
                     _emails.add(email);
