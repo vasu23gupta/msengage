@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/AppUser.dart';
+import 'package:teams_clone/shared/constants.dart';
 
 class Profile extends StatefulWidget {
   final AppUser appUser;
@@ -26,9 +27,8 @@ class _ProfileState extends State<Profile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text(_appUser.name,
-            style: TextStyle(color: Colors.black, fontSize: 17)),
+        iconTheme: APPBAR_ICON_THEME,
+        title: Text(_appUser.name, style: APPBAR_TEXT_STYLE),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.end,

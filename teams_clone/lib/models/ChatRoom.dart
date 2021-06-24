@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatMessage.dart';
+import 'package:teams_clone/services/database.dart';
 
 class ChatRoom {
   late String roomId;
@@ -38,11 +39,12 @@ class ChatRoom {
   }
 
   ChatRoom({required this.roomId});
+
   CircleAvatar _makeIcon() {
     return CircleAvatar(
         backgroundColor: Colors.white,
         backgroundImage: imgUrl == null || imgUrl!.isEmpty
             ? ExactAssetImage("assets/default_group_icon.png")
-            : NetworkImage(imgUrl!) as ImageProvider);
+            : NetworkImage(URL + "images/" + imgUrl!) as ImageProvider);
   }
 }

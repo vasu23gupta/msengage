@@ -16,9 +16,8 @@ class EventDetails extends StatelessWidget {
     final _ed = event.endDate;
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text("Event details",
-            style: TextStyle(color: Colors.black, fontSize: 17)),
+        iconTheme: APPBAR_ICON_THEME,
+        title: Text("Event details", style: APPBAR_TEXT_STYLE),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),

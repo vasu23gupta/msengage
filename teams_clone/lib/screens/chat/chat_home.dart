@@ -6,7 +6,8 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
-import 'package:teams_clone/screens/chat/create_chat.dart';
+import 'package:teams_clone/screens/chat/add_users.dart';
+import 'package:teams_clone/screens/chat/name_image.dart';
 import 'package:teams_clone/screens/search.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
@@ -54,7 +55,7 @@ class _ChatHomeState extends State<ChatHome> {
       body: _buildScaffold(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => CreateChat())),
+            .push(MaterialPageRoute(builder: (_) => ChatNameImage())),
         child: Icon(Icons.create),
       ),
     );

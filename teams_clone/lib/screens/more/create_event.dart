@@ -42,9 +42,8 @@ class _CreateEventState extends State<CreateEvent> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text("New event",
-            style: TextStyle(color: Colors.black, fontSize: 17)),
+        iconTheme: APPBAR_ICON_THEME,
+        title: Text("New event", style: APPBAR_TEXT_STYLE),
         actions: <Widget>[
           IconButton(
               onPressed: () async {

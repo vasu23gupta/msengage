@@ -1,7 +1,4 @@
 const mongoose = require("mongoose");
-const path = require('path');
-const multer = require('multer');
-const CHAT_PICTURE_PATH = path.join('/Uploads/ChatIcons');
 
 /*
 https://www.freecodecamp.org/news/create-a-professional-node-express/
@@ -14,7 +11,6 @@ const chatRoomSchema = new mongoose.Schema(
     chatInitiator: String,
     name: String,
     imgUrl: String,
-    imgExtn: String,
     censoring: {
       type: Boolean,
       default: false,
@@ -30,18 +26,7 @@ const chatRoomSchema = new mongoose.Schema(
   }
 );
 
-let storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', CHAT_PICTURE_PATH));
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now());
-  }
-});
-
 //static methods
-chatRoomSchema.statics.uploadedChatPicture = multer({ storage: storage }).single('imgUrl');
-chatRoomSchema.statics.chatPicturePath = CHAT_PICTURE_PATH;
 
 /**
  * @param {String} userId - id of user
@@ -72,8 +57,9 @@ chatRoomSchema.statics.getChatRoomByRoomId = async function (roomId) {
 /**
  * @param {Array} userIds - array of strings of userIds
  * @param {String} chatInitiator - user who initiated the chat
+ * @param {String} name - name of chatroom
  */
-chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, name) {
+chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, name, image) {
   try {
     const availableRoom = await this.findOne({
       userIds: {
@@ -90,7 +76,9 @@ chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, na
       };
     }
 
-    const newRoom = await this.create({ userIds, chatInitiator, name });
+    const savedImage = await image.save();
+    const imgUrl = savedImage._id;
+    const newRoom = await this.create({ userIds, chatInitiator, name, imgUrl });
     return {
       isNew: true,
       message: 'creating a new chatroom',

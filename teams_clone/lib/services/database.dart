@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
@@ -26,6 +27,7 @@ class UserDBService {
 
 class ChatDatabaseService {
   static String _chatUrl = URL + "chat/";
+  static Dio dio = Dio();
 
   static Future<List<ChatRoom>> getChatRooms(String uid) async {
     http.Response res =
@@ -37,15 +39,27 @@ class ChatDatabaseService {
     return _rooms;
   }
 
-  static Future<String?> createNewChatRoom(
-      List<String> ids, String name, String uid) async {
-    var body = jsonEncode({'name': name, 'userIds': ids});
-    http.Response res = await http.post(
-      Uri.parse(_chatUrl + "initiate/"),
+  static Future<bool> addUsersToChatRoom(
+      String roomId, List<String> users) async {
+    var body = jsonEncode({'users': users});
+    http.Response res = await http.patch(
+      Uri.parse(_chatUrl + "room/addUsers/" + roomId),
+      headers: {'Content-Type': 'application/json'},
       body: body,
-      headers: {'authorisation': uid, 'Content-Type': 'application/json'},
     );
-    var resBody = jsonDecode(res.body);
+    return res.statusCode == 200;
+  }
+
+  static Future<String?> createNewChatRoom(
+      List<String> ids, ChatRoom room, String uid) async {
+    FormData formData = FormData.fromMap({
+      'chatInitiator': uid,
+      'name': room.name,
+      'userIds': ids,
+      'image': await MultipartFile.fromFile(room.imgUrl!),
+    });
+    Response res = await dio.post(_chatUrl + "initiate/", data: formData);
+    var resBody = res.data;
     return resBody['success'] == 'false'
         ? null
         : resBody['chatRoom']['chatRoomId'];

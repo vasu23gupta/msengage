@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
+import 'package:teams_clone/screens/chat/add_users.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
 import 'package:teams_clone/screens/home.dart';
 import 'package:teams_clone/services/chat.dart';
@@ -35,17 +36,19 @@ class _ChatDetailsState extends State<ChatDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text("Chat Details",
-            style: TextStyle(color: Colors.black, fontSize: 17)),
+        iconTheme: APPBAR_ICON_THEME,
+        title: Text("Chat Details", style: APPBAR_TEXT_STYLE),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => AddUsers(room: _room))),
+            icon: Icon(Icons.person_add_alt_outlined),
+          ),
+        ],
       ),
       body: ListView(
         children: [
-          SizedBox(
-            child: _room.icon,
-            height: 150,
-            width: 150,
-          ),
+          SizedBox(child: _room.icon, height: 150, width: 150),
           ListTile(
             leading: Icon(Icons.edit),
             title: Text(_room.name),

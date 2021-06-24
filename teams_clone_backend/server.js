@@ -29,6 +29,9 @@ app.use('/users', usersRoute);
 const eventsRoute = require('./routes/events');
 app.use('/events', eventsRoute);
 
+const imagesRoute = require('./routes/images');
+app.use('/images', imagesRoute);
+
 //db
 async function connectDB() {
   await mongoose.connect("mongodb+srv://vasugupta:vasugupta@cluster0.uhnx9.mongodb.net/Cluster0?retryWrites=true&w=majority", { useNewUrlParser: true, useUnifiedTopology: true });

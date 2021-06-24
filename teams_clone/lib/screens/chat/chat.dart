@@ -98,10 +98,9 @@ class _ChatState extends State<Chat> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.black),
+      iconTheme: APPBAR_ICON_THEME,
       title: TextButton(
-        child: Text(_room.name,
-            style: TextStyle(color: Colors.black, fontSize: 17)),
+        child: Text(_room.name, style: APPBAR_TEXT_STYLE),
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => ChatDetails(_room))),
       ),
@@ -275,7 +274,9 @@ class _ChatState extends State<Chat> {
         children: [
           _lastMsgBy == msg.userId
               ? Container(width: 40)
-              : _room.users[msg.userId]!.icon,
+              : _room.users[msg.userId] == null
+                  ? CircleAvatar(child: Text("U"))
+                  : _room.users[msg.userId]!.icon,
           Container(
             constraints: BoxConstraints(maxWidth: _w * 0.8),
             decoration: BoxDecoration(
@@ -288,7 +289,9 @@ class _ChatState extends State<Chat> {
               children: [
                 _lastMsgBy == msg.userId
                     ? Container(width: 0)
-                    : Text(_room.users[msg.userId]!.name),
+                    : _room.users[msg.userId] == null
+                        ? Text("User")
+                        : Text(_room.users[msg.userId]!.name),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

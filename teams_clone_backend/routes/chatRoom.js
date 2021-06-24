@@ -1,10 +1,26 @@
 const mongoose = require('mongoose');
 const express = require('express');
 require('../models/ChatRoom.js');
+const fs = require('fs');
 const ChatRoomModel = mongoose.model('ChatRoom');
 const ChatMessageModel = require('../models/ChatMessage.js');
 const UserModel = require('../models/User.js');
 const router = express.Router();
+const Image = require('../models/Image');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  filename: function (req, file, cb) {
+      cb(null, file.originalname);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+      fileSize: 15 * 1024 * 1024
+  }
+});
 
 router.post('/room/message/:roomId', async (req, res) => {
   try {
@@ -111,6 +127,25 @@ router.patch('/room/join/:roomId', async (req, res) => {
   }
 });
 
+router.patch('/room/addUsers/:roomId', async (req, res) => {
+  try {
+    const roomId = req.params.roomId;
+    console.log(req.body.users);
+    const room = await ChatRoomModel.updateOne({ _id: roomId }, {
+      $push: {
+        userIds: {$each : req.body.users}
+      }
+    });
+    console.log(room);
+    return res.status(200).json({
+      success: true,
+      message: "Operation performed successfully"
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({ success: false, error: error })
+  }
+});
+
 router.patch('/room/leave/:roomId',  async (req, res) => {
   try {
     const roomId = req.params.roomId;
@@ -173,12 +208,19 @@ router.get('/room/:roomId', async (req, res) => {
 });
 
 //create new chat room
-router.post('/initiate', async (req, res) => {
+router.post('/initiate', upload.single('image'), async (req, res) => {
   try {
-    const { userIds, name } = req.body;
-    const chatInitiator = req.get('authorisation');
-    const allUserIds = [...userIds, chatInitiator];
-    const chatRoom = await ChatRoomModel.initiateChat(allUserIds, chatInitiator, name);
+    const { userIds, name, chatInitiator } = req.body;
+    var allUserIds;
+    // = [...userIds, chatInitiator];
+    if(Array.isArray(userIds)) allUserIds = [...userIds, chatInitiator];
+    else allUserIds = [userIds, chatInitiator];
+    console.log(allUserIds);
+    var f = req.file;
+    var image = new Image();
+    image.img.data = fs.readFileSync(f.path);
+    image.img.contentType = f.mimetype;
+    const chatRoom = await ChatRoomModel.initiateChat(allUserIds, chatInitiator, name, image);
     return res.status(200).json({ success: true, chatRoom });
   } catch (error) {
     return res.status(error.status || 500).json({ success: false, error: error })

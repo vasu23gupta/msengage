@@ -7,6 +7,7 @@ import 'package:teams_clone/screens/meet/meet.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/screens/profile.dart';
 import 'package:teams_clone/services/auth.dart';
+import 'package:teams_clone/shared/constants.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -67,13 +68,12 @@ class _HomeState extends State<Home> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: APPBAR_ICON_THEME,
         leading: IconButton(
           icon: _appUser.icon,
           onPressed: () => _scaffoldKey.currentState!.openDrawer(),
         ),
-        title: Text(_appBarTitles[_currentIndex],
-            style: TextStyle(color: Colors.black, fontSize: 17)),
+        title: Text(_appBarTitles[_currentIndex], style: APPBAR_TEXT_STYLE),
         elevation: 0,
       ),
       drawer: Drawer(

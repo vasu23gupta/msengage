@@ -19,10 +19,12 @@ const textInputDecoration = InputDecoration(
 );
 
 const PURPLE_COLOR = Color(0xff505AC9);
+const APPBAR_ICON_THEME = IconThemeData(color: Colors.black);
+const APPBAR_TEXT_STYLE = TextStyle(color: Colors.black, fontSize: 17);
 
 ThemeData themeData = ThemeData(
   appBarTheme: AppBarTheme(
-      actionsIconTheme: IconThemeData(color: Colors.black),
+      actionsIconTheme: APPBAR_ICON_THEME,
       backgroundColor: Colors.white,
       titleTextStyle: TextStyle(color: Colors.black)),
   floatingActionButtonTheme:

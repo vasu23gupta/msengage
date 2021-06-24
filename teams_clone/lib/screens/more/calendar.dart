@@ -49,9 +49,9 @@ class _CalendarState extends State<Calendar> {
       ? const Center(child: CircularProgressIndicator())
       : Scaffold(
           appBar: AppBar(
-            iconTheme: IconThemeData(color: Colors.black),
+            iconTheme: APPBAR_ICON_THEME,
             title: Text(MONTHS_FULL[DateTime.now().month - 1],
-                style: TextStyle(color: Colors.black, fontSize: 17)),
+                style: APPBAR_TEXT_STYLE),
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () => Navigator.of(context).push(
