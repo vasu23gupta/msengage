@@ -3,13 +3,13 @@ class ChatMessage {
   late String msg;
   late String userId;
   late String roomId;
-  late bool isMedia;
+  late String type;
 
   ChatMessage.fromJson(Map<String, dynamic> json) {
     id = json['_id'];
     msg = json['message'];
     userId = json['postedByUser'];
     roomId = json['chatRoomId'];
-    isMedia = json['isMedia'];
+    //type = json['type'];
   }
 }

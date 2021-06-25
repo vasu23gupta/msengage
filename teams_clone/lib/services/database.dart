@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 
@@ -8,6 +10,7 @@ const String URL = "http://10.0.2.2:3000/";
 
 class UserDBService {
   static String _usersUrl = URL + "users/";
+  static Dio _dio = Dio();
 
   static Future<http.Response> addUser(
       String username, String email, String uid) async {
@@ -23,11 +26,37 @@ class UserDBService {
     var body = jsonDecode(res.body);
     return body == null ? null : body['_id'];
   }
+
+  static Future<String> changeUserIcon(
+      User user, AppUser appUser, String path) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(path),
+      'old': appUser.imgUrl,
+    });
+
+    Response res = await _dio.patch(
+      _usersUrl + "changeIcon/" + appUser.id,
+      data: formData,
+    );
+    if (res.statusCode == 200) user.updatePhotoURL(res.data['imgUrl']);
+    return res.data['imgUrl'];
+  }
+
+  static Future<bool> removeUserIcon(User user, AppUser appUser) async {
+    var body = jsonEncode({'old': appUser.imgUrl});
+    http.Response res = await http.patch(
+      Uri.parse(_usersUrl + "removeIcon/" + appUser.id),
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+    if (res.statusCode == 200) user.updatePhotoURL(null);
+    return res.statusCode == 200;
+  }
 }
 
 class ChatDatabaseService {
   static String _chatUrl = URL + "chat/";
-  static Dio dio = Dio();
+  static Dio _dio = Dio();
 
   static Future<List<ChatRoom>> getChatRooms(String uid) async {
     http.Response res =
@@ -58,7 +87,7 @@ class ChatDatabaseService {
       'userIds': ids,
       'image': await MultipartFile.fromFile(room.imgUrl!),
     });
-    Response res = await dio.post(_chatUrl + "initiate/", data: formData);
+    Response res = await _dio.post(_chatUrl + "initiate/", data: formData);
     var resBody = res.data;
     return resBody['success'] == 'false'
         ? null
@@ -98,6 +127,30 @@ class ChatDatabaseService {
         body: jsonEncode({'name': name}));
     if (res.statusCode == 200) return true;
     return false;
+  }
+
+  static Future<String> changeRoomIcon(ChatRoom room, String path) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(path),
+      'old': room.imgUrl,
+    });
+
+    Response res = await _dio.patch(
+      _chatUrl + "room/changeRoomIcon/" + room.roomId,
+      data: formData,
+    );
+
+    return res.data['imgUrl'];
+  }
+
+  static Future<bool> removeRoomIcon(ChatRoom room) async {
+    var body = jsonEncode({'old': room.imgUrl});
+    http.Response res = await http.patch(
+      Uri.parse(_chatUrl + "room/removeRoomIcon/" + room.roomId),
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+    return res.statusCode == 200;
   }
 
   static Future<bool> changeRoomCensorship(

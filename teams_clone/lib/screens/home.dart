@@ -1,12 +1,16 @@
+import 'package:alan_voice/alan_voice.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/AppUser.dart';
+import 'package:teams_clone/models/ChatRoom.dart';
+import 'package:teams_clone/screens/chat/chat.dart';
 import 'package:teams_clone/screens/chat/chat_home.dart';
 import 'package:teams_clone/screens/meet/meet.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/screens/profile.dart';
 import 'package:teams_clone/services/auth.dart';
+import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
 
 class Home extends StatefulWidget {
@@ -22,6 +26,14 @@ class _HomeState extends State<Home> {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
     _appUser = AppUser.fromFirebaseUser(_user!);
+    _userIcon = _user!.photoURL == null || _user!.photoURL!.isEmpty
+        ? CircleAvatar(child: Text(_appUser.name.substring(0, 2).toUpperCase()))
+        : CircleAvatar(
+            backgroundImage: NetworkImage(URL + "images/" + _user!.photoURL!));
+    // AlanVoice.addButton(
+    //     "2f5e93444b50a4a5677ea2c682b3f4d62e956eca572e1d8b807a3e2338fdd0dc/stage",
+    //     buttonAlign: AlanVoice.BUTTON_ALIGN_LEFT);
+    // AlanVoice.callbacks.add((command) => handleCommand(command.data!));
   }
 
   int _currentIndex = 1;
@@ -29,6 +41,9 @@ class _HomeState extends State<Home> {
   List<String> _appBarTitles = ['Feed', 'Chat', 'Meet Now', 'More'];
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   late AppUser _appUser;
+  late CircleAvatar _userIcon;
+  late double _h;
+  late double _w;
 
   void _onPageChanged(int index) {
     if (index == 3) {
@@ -65,12 +80,14 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    _h = MediaQuery.of(context).size.height;
+    _w = MediaQuery.of(context).size.width;
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
         iconTheme: APPBAR_ICON_THEME,
         leading: IconButton(
-          icon: _appUser.icon,
+          icon: _userIcon,
           onPressed: () => _scaffoldKey.currentState!.openDrawer(),
         ),
         title: Text(_appBarTitles[_currentIndex], style: APPBAR_TEXT_STYLE),
@@ -79,9 +96,14 @@ class _HomeState extends State<Home> {
       drawer: Drawer(
         child: ListView(
           children: <Widget>[
+            SizedBox(height: _h * 0.03),
             ListTile(
-              leading: _appUser.icon,
-              title: Text(_user!.displayName!),
+              leading: _userIcon,
+              title: Text(
+                _user!.displayName!,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: _w * 0.045),
+              ),
               trailing: Icon(Icons.navigate_next),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => Profile(appUser: _appUser))),
@@ -112,23 +134,36 @@ class _HomeState extends State<Home> {
         type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "Activity",
-          ),
+              icon: Icon(Icons.notifications), label: "Activity"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_rounded),
-            label: "Chat",
-          ),
+              icon: Icon(Icons.chat_rounded), label: "Chat"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.video_call_outlined),
-            label: "Meet",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: "More",
-          ),
+              icon: Icon(Icons.video_call_outlined), label: "Meet"),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: "More"),
         ],
       ),
     );
   }
+
+  // handleCommand(Map<String, dynamic> res) {
+  //   switch (res['command']) {
+  //     case 'my events':
+  //       Navigator.push(context, MaterialPageRoute(builder: (_) => Calendar()));
+  //       break;
+
+  //     case 'team chat':
+  //       print(res);
+  //       for (ChatRoom room in rooms) {
+  //         if (room.name.toLowerCase().contains(res['room name']))
+  //           Navigator.push(
+  //               context, MaterialPageRoute(builder: (_) => Chat(room)));
+  //         break;
+  //       }
+  //       break;
+
+  //     case 'back':
+  //       Navigator.pop(context);
+  //       break;
+  //   }
+  // }
 }

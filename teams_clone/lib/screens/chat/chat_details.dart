@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -27,12 +28,6 @@ class _ChatDetailsState extends State<ChatDetails> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    socket.emit("unsubscribe", {"room": _room.roomId});
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +43,22 @@ class _ChatDetailsState extends State<ChatDetails> {
       ),
       body: ListView(
         children: [
-          SizedBox(child: _room.icon, height: 150, width: 150),
+          SizedBox(height: 10),
+          Center(
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  radius: 70,
+                  backgroundImage: _room.imgUrl == null || _room.imgUrl!.isEmpty
+                      ? ExactAssetImage("assets/default_group_icon.png")
+                      : NetworkImage(URL + "images/" + _room.imgUrl!)
+                          as ImageProvider,
+                ),
+                _editImageButton()
+              ],
+            ),
+          ),
           ListTile(
             leading: Icon(Icons.edit),
             title: Text(_room.name),
@@ -93,12 +103,57 @@ class _ChatDetailsState extends State<ChatDetails> {
           ListView(
             shrinkWrap: true,
             children: _room.users.values
-                .map((e) => ListTile(leading: e.icon, title: Text(e.name)))
+                .map((e) => ListTile(
+                    leading: e.imgUrl == null || e.imgUrl!.isEmpty
+                        ? CircleAvatar(
+                            child: Text(e.name.substring(0, 2).toUpperCase()))
+                        : CircleAvatar(
+                            backgroundImage:
+                                NetworkImage(URL + "images/" + e.imgUrl!)),
+                    title: Text(e.name)))
                 .toList(),
           )
         ],
       ),
     );
+  }
+
+  Positioned _editImageButton() {
+    return Positioned(
+        bottom: 0,
+        right: 0,
+        height: 30,
+        width: 30,
+        child: PopupMenuButton(
+          onSelected: (choice) async {
+            switch (choice) {
+              case 'Edit':
+                String? path = await _pickFile();
+                String? newImg;
+                if (path != null)
+                  newImg =
+                      await ChatDatabaseService.changeRoomIcon(_room, path);
+                setState(() => _room.imgUrl = newImg);
+                break;
+
+              case 'Remove':
+                bool done = await ChatDatabaseService.removeRoomIcon(_room);
+                if (done) setState(() => _room.imgUrl = null);
+                break;
+            }
+          },
+          icon: Icon(Icons.edit),
+          itemBuilder: (context) => ['Edit', 'Remove']
+              .map(
+                  (choice) => PopupMenuItem(child: Text(choice), value: choice))
+              .toList(),
+        ));
+  }
+
+  Future<String?> _pickFile() async {
+    FilePickerResult? pickedFile = await FilePicker.platform
+        .pickFiles(allowMultiple: false, type: FileType.image);
+    if (pickedFile != null) return pickedFile.files.first.path;
   }
 
   StatefulBuilder _buildChangeNameDialog() {

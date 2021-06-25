@@ -11,14 +11,14 @@ const multer = require('multer');
 
 const storage = multer.diskStorage({
   filename: function (req, file, cb) {
-      cb(null, file.originalname);
+    cb(null, file.originalname);
   }
 });
 
 const upload = multer({
   storage: storage,
   limits: {
-      fileSize: 15 * 1024 * 1024
+    fileSize: 15 * 1024 * 1024
   }
 });
 
@@ -26,9 +26,9 @@ router.post('/room/message/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
     const messageText = req.body.messageText;
-    const isMedia = req.body.isMedia;
+    const type = req.body.type;
     const currentLoggedUser = req.get('authorisation');
-    const post = await ChatMessageModel.createPostInChatRoom(roomId, messageText, currentLoggedUser, isMedia);
+    const post = await ChatMessageModel.createPostInChatRoom(roomId, messageText, currentLoggedUser, type);
     global.io.sockets.in(roomId).emit('new message', { message: post });
     return res.status(200).json({ success: true, post: post });
   } catch (error) {
@@ -71,25 +71,18 @@ router.patch('/room/changeRoomCensorship/:roomId', async (req, res) => {
   }
 });
 
-router.patch('/room/changeRoomIcon/:roomId', async (req, res) => {
+router.patch('/room/changeRoomIcon/:roomId', upload.single('image'), async (req, res) => {
   try {
     const roomId = req.params.roomId;
-    const room = await ChatRoomModel.findById({ _id: roomId });
-    ChatRoomModel.uploadedChatPicture(req, res, function (err) {
-      if (err) {
-        console.log('*******Multer Error: ', err);
-        return res.status(500).json({ success: false, error: error })
-      }
-      if (req.file) {
-        room.imgUrl = 'https://www.backend.zecide.com/' + ChatRoomModel.chatPicturePath + '/' + req.file.filename;
-        room.save();
-        return res.status(200).json({
-          success: true,
-          message: "Operation performed successfully"
-        });
-      }
-    });
-
+    var f = req.file;
+    var image = new Image();
+    image.img.data = fs.readFileSync(f.path);
+    image.img.contentType = f.mimetype;
+    const savedImage = await image.save();
+    const oldImg = req.body.old;
+    if (oldImg) await Image.deleteOne({ _id: oldImg });
+    const room = await ChatRoomModel.updateOne({ _id: roomId }, { $set: { imgUrl: savedImage._id } });
+    return res.status(200).json({ success: true, 'imgUrl': savedImage._id });
   } catch (error) {
     return res.status(error.status || 500).json({ success: false, error: error })
   }
@@ -98,15 +91,13 @@ router.patch('/room/changeRoomIcon/:roomId', async (req, res) => {
 router.patch('/room/removeRoomIcon/:roomId', async (req, res, next) => {
   try {
     var roomId = req.params.roomId;
-    let room = await ChatRoomModel.getChatRoomByRoomId(roomId);
-    room.imgUrl = null;
-    await room.save();
-    res.status(200).json({ success: true, conversation: room });
+    await ChatRoomModel.updateOne({ _id: roomId }, { $set: { imgUrl: undefined } });
+    await Image.deleteOne({ _id: req.body.old });
+    res.status(200).json({ success: true });
   }
   catch (err) {
     console.log(err);
-    res.setHeader('Content-Type', 'application/json');
-    res.status(err.status || 500).json({ err: err });
+    return res.status(err.status || 500).json({ success: false, error: err })
   }
 });
 
@@ -133,7 +124,7 @@ router.patch('/room/addUsers/:roomId', async (req, res) => {
     console.log(req.body.users);
     const room = await ChatRoomModel.updateOne({ _id: roomId }, {
       $push: {
-        userIds: {$each : req.body.users}
+        userIds: { $each: req.body.users }
       }
     });
     console.log(room);
@@ -146,7 +137,7 @@ router.patch('/room/addUsers/:roomId', async (req, res) => {
   }
 });
 
-router.patch('/room/leave/:roomId',  async (req, res) => {
+router.patch('/room/leave/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
     const room = await ChatRoomModel.updateOne({ _id: roomId }, {
@@ -213,7 +204,7 @@ router.post('/initiate', upload.single('image'), async (req, res) => {
     const { userIds, name, chatInitiator } = req.body;
     var allUserIds;
     // = [...userIds, chatInitiator];
-    if(Array.isArray(userIds)) allUserIds = [...userIds, chatInitiator];
+    if (Array.isArray(userIds)) allUserIds = [...userIds, chatInitiator];
     else allUserIds = [userIds, chatInitiator];
     console.log(allUserIds);
     var f = req.file;

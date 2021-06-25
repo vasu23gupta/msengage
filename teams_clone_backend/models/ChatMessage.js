@@ -17,8 +17,8 @@ const chatMessageSchema = new mongoose.Schema(
             ref: 'Users',
             required: true,
         },
-        isMedia: {
-            type: Boolean,
+        type: {
+            type: String,
             required: true,
         }
     },
@@ -33,16 +33,16 @@ const chatMessageSchema = new mongoose.Schema(
  * @param {String} roomId - id of chat room
  * @param {String} message - message you want to post in the chat room
  * @param {String} postedByUser - user who is posting the message
- * @param {Boolean} isMedia - whether the message is media or normal message
+ * @param {String} type - whether the message is media or normal message
  */
 
-chatMessageSchema.statics.createPostInChatRoom = async function (chatRoomId, message, postedByUser, isMedia) {
+chatMessageSchema.statics.createPostInChatRoom = async function (chatRoomId, message, postedByUser, type) {
     try {
         const post = await this.create({
             chatRoomId,
             message,
             postedByUser,
-            isMedia,
+            type,
         });
         return post;
     } catch (error) {

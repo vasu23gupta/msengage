@@ -238,18 +238,18 @@ class _ChatState extends State<Chat> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (msg.isMedia)
-              IconButton(
-                onPressed: () async {
-                  if (msg.isMedia)
-                    await launch(await FirebaseStorage.instance
-                        .ref()
-                        .child(_room.roomId)
-                        .child(msg.msg)
-                        .getDownloadURL());
-                },
-                icon: Icon(Icons.download),
-              ),
+            // if (msg.isMedia)
+            //   IconButton(
+            //     onPressed: () async {
+            //       if (msg.isMedia)
+            //         await launch(await FirebaseStorage.instance
+            //             .ref()
+            //             .child(_room.roomId)
+            //             .child(msg.msg)
+            //             .getDownloadURL());
+            //     },
+            //     icon: Icon(Icons.download),
+            //   ),
             Flexible(
               child: Text(
                 msg.msg,
@@ -272,11 +272,7 @@ class _ChatState extends State<Chat> {
           : EdgeInsets.fromLTRB(6, 6, 6, 0),
       child: Row(
         children: [
-          _lastMsgBy == msg.userId
-              ? Container(width: 40)
-              : _room.users[msg.userId] == null
-                  ? CircleAvatar(child: Text("U"))
-                  : _room.users[msg.userId]!.icon,
+          _getUserIcon(msg),
           Container(
             constraints: BoxConstraints(maxWidth: _w * 0.8),
             decoration: BoxDecoration(
@@ -296,24 +292,22 @@ class _ChatState extends State<Chat> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Flexible(
-                      child: Text(
-                        msg.msg,
-                        style: TextStyle(
-                            color: Colors.black, fontSize: _w * 0.045),
-                      ),
+                      child: Text(msg.msg,
+                          style: TextStyle(
+                              color: Colors.black, fontSize: _w * 0.045)),
                     ),
-                    if (msg.isMedia)
-                      IconButton(
-                        onPressed: () async {
-                          if (msg.isMedia)
-                            await launch(await FirebaseStorage.instance
-                                .ref()
-                                .child(_room.roomId)
-                                .child(msg.msg)
-                                .getDownloadURL());
-                        },
-                        icon: Icon(Icons.download),
-                      ),
+                    // if (msg.isMedia)
+                    //   IconButton(
+                    //     onPressed: () async {
+                    //       if (msg.isMedia)
+                    //         await launch(await FirebaseStorage.instance
+                    //             .ref()
+                    //             .child(_room.roomId)
+                    //             .child(msg.msg)
+                    //             .getDownloadURL());
+                    //     },
+                    //     icon: Icon(Icons.download),
+                    //   ),
                   ],
                 ),
               ],
@@ -325,6 +319,20 @@ class _ChatState extends State<Chat> {
     _lastMsgBy = msg.userId;
     return res;
   }
+
+  Widget _getUserIcon(ChatMessage msg) => _lastMsgBy == msg.userId
+      ? Container(width: 40)
+      : _room.users[msg.userId] == null
+          ? CircleAvatar(child: Text("U"))
+          : _room.users[msg.userId]!.imgUrl == null ||
+                  _room.users[msg.userId]!.imgUrl!.isEmpty
+              ? CircleAvatar(
+                  child: Text(_room.users[msg.userId]!.name
+                      .substring(0, 2)
+                      .toUpperCase()))
+              : CircleAvatar(
+                  backgroundImage:
+                      NetworkImage(_room.users[msg.userId]!.imgUrl!));
 
   Future<void> _pickFile() async {
     FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();

@@ -1,12 +1,8 @@
-import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
-import 'package:teams_clone/screens/chat/add_users.dart';
 import 'package:teams_clone/screens/chat/name_image.dart';
 import 'package:teams_clone/screens/search.dart';
 import 'package:teams_clone/services/chat.dart';
@@ -19,8 +15,9 @@ class ChatHome extends StatefulWidget {
   _ChatHomeState createState() => _ChatHomeState();
 }
 
+List<ChatRoom> rooms = [];
+
 class _ChatHomeState extends State<ChatHome> {
-  List<ChatRoom> _rooms = [];
   @override
   void initState() {
     super.initState();
@@ -68,17 +65,25 @@ class _ChatHomeState extends State<ChatHome> {
         if (!snapshot.hasData)
           return Center(child: CircularProgressIndicator());
 
-        _rooms = snapshot.data as List<ChatRoom>;
-        return ListView.builder(
-          itemCount: _rooms.length,
-          itemBuilder: (context, index) => _buildChatRoomTile(_rooms[index]),
+        rooms = snapshot.data as List<ChatRoom>;
+        return RefreshIndicator(
+          onRefresh: () async => setState(() {}),
+          child: ListView.builder(
+            itemCount: rooms.length,
+            itemBuilder: (context, index) => _buildChatRoomTile(rooms[index]),
+          ),
         );
       },
     );
   }
 
   ListTile _buildChatRoomTile(ChatRoom room) => ListTile(
-        leading: room.icon,
+        leading: CircleAvatar(
+          backgroundColor: Colors.white,
+          backgroundImage: room.imgUrl == null || room.imgUrl!.isEmpty
+              ? ExactAssetImage("assets/default_group_icon.png")
+              : NetworkImage(URL + "images/" + room.imgUrl!) as ImageProvider,
+        ),
         title: Text(room.name),
         onTap: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => Chat(room))),

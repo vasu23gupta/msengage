@@ -1,1 +1,2 @@
-different chat icon in chat details.
+user icon not updating.
+team icon update needs refresh.
