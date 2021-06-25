@@ -1,4 +1,3 @@
-import 'package:alan_voice/alan_voice.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +28,8 @@ class _HomeState extends State<Home> {
     _userIcon = _user!.photoURL == null || _user!.photoURL!.isEmpty
         ? CircleAvatar(child: Text(_appUser.name.substring(0, 2).toUpperCase()))
         : CircleAvatar(
-            backgroundImage: NetworkImage(URL + "images/" + _user!.photoURL!));
+            backgroundImage:
+                ImageDatabaseService.getImageByImageId(_user!.photoURL!));
     // AlanVoice.addButton(
     //     "2f5e93444b50a4a5677ea2c682b3f4d62e956eca572e1d8b807a3e2338fdd0dc/stage",
     //     buttonAlign: AlanVoice.BUTTON_ALIGN_LEFT);
@@ -64,13 +64,12 @@ class _HomeState extends State<Home> {
       padding: const EdgeInsets.all(8.0),
       child: Column(
         children: [
-          Container(
-            height: 50,
-            width: 50,
-            child: ElevatedButton(
-                onPressed: () => Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (_) => Calendar())),
-                child: Icon(Icons.calendar_today)),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => Calendar())),
+            child: Icon(Icons.calendar_today),
+            style: ElevatedButton.styleFrom(
+                primary: PURPLE_COLOR, fixedSize: Size(50, 50)),
           ),
           Text("Calendar")
         ],

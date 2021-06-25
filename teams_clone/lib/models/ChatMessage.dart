@@ -10,6 +10,6 @@ class ChatMessage {
     msg = json['message'];
     userId = json['postedByUser'];
     roomId = json['chatRoomId'];
-    //type = json['type'];
+    type = json['type'];
   }
 }

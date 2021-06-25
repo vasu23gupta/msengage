@@ -52,7 +52,7 @@ class _ChatDetailsState extends State<ChatDetails> {
                   radius: 70,
                   backgroundImage: _room.imgUrl == null || _room.imgUrl!.isEmpty
                       ? ExactAssetImage("assets/default_group_icon.png")
-                      : NetworkImage(URL + "images/" + _room.imgUrl!)
+                      : ImageDatabaseService.getImageByImageId(_room.imgUrl!)
                           as ImageProvider,
                 ),
                 _editImageButton()
@@ -109,7 +109,8 @@ class _ChatDetailsState extends State<ChatDetails> {
                             child: Text(e.name.substring(0, 2).toUpperCase()))
                         : CircleAvatar(
                             backgroundImage:
-                                NetworkImage(URL + "images/" + e.imgUrl!)),
+                                ImageDatabaseService.getImageByImageId(
+                                    e.imgUrl!)),
                     title: Text(e.name)))
                 .toList(),
           )

@@ -36,6 +36,8 @@ class _ChatState extends State<Chat> {
   final _filter = ProfanityFilter();
   late Stream<dynamic> _chatStream;
   String _lastMsgBy = '';
+  bool _showMediaSheet = false;
+  String _msgType = "text";
 
   @override
   void initState() {
@@ -120,14 +122,16 @@ class _ChatState extends State<Chat> {
   ListView _buildChatTab() => ListView(
         reverse: true,
         children: [
-          _buildBottomRow(),
+          _showMediaSheet ? _buildMediaSheet() : Container(),
+          _buildInputRow(),
           StreamBuilder(
             stream: _chatStream,
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               if (snapshot.hasData) {
                 var json = jsonDecode(jsonEncode(snapshot.data))['message'];
                 ChatMessage cm = ChatMessage.fromJson(json);
-                if (_room.messages.last.id != cm.id) _room.messages.add(cm);
+                if (_room.messages.isEmpty || _room.messages.last.id != cm.id)
+                  _room.messages.add(cm);
               }
               return Container(
                 height: _h * 0.8,
@@ -146,7 +150,89 @@ class _ChatState extends State<Chat> {
         ],
       );
 
-  Container _buildBottomRow() => Container(
+  Wrap _buildMediaSheet() {
+    return Wrap(
+      children: [
+        _buildAttachImageButton(),
+        _buildAttachFileButton(),
+        _buildAttachLocationButton()
+      ],
+    );
+  }
+
+  Padding _buildAttachImageButton() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          ElevatedButton(
+            onPressed: _pickImage,
+            child: Icon(
+              Icons.image_outlined,
+              color: Colors.green,
+              size: 30,
+            ),
+            style: ElevatedButton.styleFrom(
+                primary: Colors.white, fixedSize: Size(40, 50)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text("Image"),
+          )
+        ],
+      ),
+    );
+  }
+
+  Padding _buildAttachFileButton() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          ElevatedButton(
+            onPressed: _pickFile,
+            child: Icon(
+              Icons.attachment_rounded,
+              color: Colors.blue,
+              size: 30,
+            ),
+            style: ElevatedButton.styleFrom(
+                primary: Colors.white, fixedSize: Size(40, 50)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text("File"),
+          )
+        ],
+      ),
+    );
+  }
+
+  Padding _buildAttachLocationButton() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          ElevatedButton(
+            onPressed: () {},
+            child: Icon(
+              Icons.location_on_outlined,
+              color: Colors.red,
+              size: 30,
+            ),
+            style: ElevatedButton.styleFrom(
+                primary: Colors.white, fixedSize: Size(40, 50)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text("Location"),
+          )
+        ],
+      ),
+    );
+  }
+
+  Container _buildInputRow() => Container(
         height: _h * 0.08,
         alignment: Alignment.bottomCenter,
         color: Theme.of(context).bottomAppBarColor,
@@ -154,8 +240,9 @@ class _ChatState extends State<Chat> {
         child: Row(
           children: [
             ElevatedButton(
-              onPressed: _pickFile,
-              child: Icon(Icons.add, size: 20),
+              onPressed: () =>
+                  setState(() => _showMediaSheet = !_showMediaSheet),
+              child: Icon(_showMediaSheet ? Icons.close : Icons.add, size: 20),
               style: ElevatedButton.styleFrom(
                 shape: CircleBorder(),
                 primary: PURPLE_COLOR,
@@ -163,21 +250,14 @@ class _ChatState extends State<Chat> {
               ),
             ),
             SizedBox(
-              width: _w * 0.75,
+              width: _w * 0.63,
               child: TextField(
+                // minLines: null,
+                // maxLines: null,
+                // expands: true,
                 enabled: pFile == null,
                 controller: _enterMsgController,
                 decoration: InputDecoration(
-                    suffixIcon: _uploading
-                        ? CircularProgressIndicator()
-                        : IconButton(
-                            icon: Icon(Icons.close, color: Colors.black),
-                            onPressed: () {
-                              _enterMsgController.clear();
-                              if (pFile != null && !_uploading)
-                                setState(() => pFile = null);
-                            },
-                          ),
                     focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey)),
                     border: OutlineInputBorder(
@@ -185,6 +265,16 @@ class _ChatState extends State<Chat> {
                     hintText: pFile == null ? "Enter message" : pFile!.name),
               ),
             ),
+            _uploading
+                ? CircularProgressIndicator()
+                : IconButton(
+                    icon: Icon(Icons.close, color: Colors.black),
+                    onPressed: () {
+                      _enterMsgController.clear();
+                      _msgType = "text";
+                      if (pFile != null) setState(() => pFile = null);
+                    },
+                  ),
             IconButton(
               onPressed: _sendMessage,
               icon: Icon(Icons.send),
@@ -195,28 +285,39 @@ class _ChatState extends State<Chat> {
       );
 
   Future<void> _sendMessage() async {
-    String msg = _enterMsgController.text;
-    msg = msg.trim();
+    String msg = _enterMsgController.text.trim();
     Response res;
-    if (pFile != null) {
-      msg = pFile!.name;
-      _uploading = true;
-      UploadTask? task = FirebaseStorage.instance
-          .ref()
-          .child(_room.roomId)
-          .child(pFile!.name)
-          .putFile(File(pFile!.path!));
-      await task.then((TaskSnapshot snapshot) {});
-      _uploading = false;
+    switch (_msgType) {
+      case "text":
+        if (_room.censoring) msg = _filter.censor(msg);
+        break;
+      case "file":
+        msg = pFile!.name;
+        setState(() => _uploading = true);
+        UploadTask? task = FirebaseStorage.instance
+            .ref()
+            .child(_room.roomId)
+            .child(pFile!.name)
+            .putFile(File(pFile!.path!));
+        await task.then((TaskSnapshot snapshot) {});
+        setState(() => _uploading = false);
+        break;
+      case "image":
+        setState(() => _uploading = true);
+        msg = await ImageDatabaseService.uploadImage(
+            pFile!.path!, _room.censoring);
+        setState(() => _uploading = false);
+        break;
+      case "location":
+        break;
     }
     if (msg.isNotEmpty) {
-      if (_room.censoring) msg = _filter.censor(msg);
-
       res = await ChatDatabaseService.sendMessage(
-          msg, _room.roomId, _user!.uid, pFile != null);
+          msg, _room.roomId, _user!.uid, _msgType);
 
       if (res.statusCode == 200) {
         _enterMsgController.clear();
+        _msgType = "text";
         if (pFile != null) setState(() => pFile = null);
       }
     }
@@ -238,24 +339,30 @@ class _ChatState extends State<Chat> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // if (msg.isMedia)
-            //   IconButton(
-            //     onPressed: () async {
-            //       if (msg.isMedia)
-            //         await launch(await FirebaseStorage.instance
-            //             .ref()
-            //             .child(_room.roomId)
-            //             .child(msg.msg)
-            //             .getDownloadURL());
-            //     },
-            //     icon: Icon(Icons.download),
-            //   ),
-            Flexible(
-              child: Text(
-                msg.msg,
-                style: TextStyle(color: Colors.white, fontSize: _w * 0.045),
+            if (msg.type == "file")
+              IconButton(
+                onPressed: () async {
+                  await launch(await FirebaseStorage.instance
+                      .ref()
+                      .child(_room.roomId)
+                      .child(msg.msg)
+                      .getDownloadURL());
+                },
+                icon: Icon(Icons.download),
               ),
-            ),
+            if (msg.type == "image")
+              Image(
+                image: ImageDatabaseService.getImageByImageId(msg.msg),
+                height: _h * 0.3,
+                fit: BoxFit.contain,
+              ),
+            if (msg.type == "file" || msg.type == "text")
+              Flexible(
+                child: Text(
+                  msg.msg,
+                  style: TextStyle(color: Colors.white, fontSize: _w * 0.045),
+                ),
+              ),
           ],
         ),
       ),
@@ -320,23 +427,40 @@ class _ChatState extends State<Chat> {
     return res;
   }
 
-  Widget _getUserIcon(ChatMessage msg) => _lastMsgBy == msg.userId
-      ? Container(width: 40)
-      : _room.users[msg.userId] == null
-          ? CircleAvatar(child: Text("U"))
-          : _room.users[msg.userId]!.imgUrl == null ||
-                  _room.users[msg.userId]!.imgUrl!.isEmpty
-              ? CircleAvatar(
-                  child: Text(_room.users[msg.userId]!.name
-                      .substring(0, 2)
-                      .toUpperCase()))
-              : CircleAvatar(
-                  backgroundImage:
-                      NetworkImage(_room.users[msg.userId]!.imgUrl!));
+  Widget _getUserIcon(ChatMessage msg) {
+    return _lastMsgBy == msg.userId
+        ? Container(width: 40)
+        : _room.users[msg.userId] == null
+            ? CircleAvatar(child: Text("U"))
+            : _room.users[msg.userId]!.imgUrl == null ||
+                    _room.users[msg.userId]!.imgUrl!.isEmpty
+                ? CircleAvatar(
+                    child: Text(_room.users[msg.userId]!.name
+                        .substring(0, 2)
+                        .toUpperCase()))
+                : CircleAvatar(
+                    backgroundImage:
+                        NetworkImage(_room.users[msg.userId]!.imgUrl!));
+  }
 
   Future<void> _pickFile() async {
     FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();
     _enterMsgController.clear();
-    if (pickedFile != null) setState(() => pFile = pickedFile.files.first);
+    if (pickedFile != null)
+      setState(() {
+        pFile = pickedFile.files.first;
+        _msgType = "file";
+      });
+  }
+
+  Future<void> _pickImage() async {
+    FilePickerResult? pickedFile = await FilePicker.platform
+        .pickFiles(allowMultiple: false, type: FileType.image);
+    _enterMsgController.clear();
+    if (pickedFile != null)
+      setState(() {
+        pFile = pickedFile.files.first;
+        _msgType = "image";
+      });
   }
 }

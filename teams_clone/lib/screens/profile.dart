@@ -52,8 +52,8 @@ class _ProfileState extends State<Profile> {
                       ))
                   : CircleAvatar(
                       radius: 50,
-                      backgroundImage:
-                          NetworkImage(URL + "images/" + _appUser.imgUrl!)),
+                      backgroundImage: ImageDatabaseService.getImageByImageId(
+                          _appUser.imgUrl!)),
               _editImageButton()
             ],
           )),

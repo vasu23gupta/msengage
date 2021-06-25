@@ -82,7 +82,8 @@ class _ChatHomeState extends State<ChatHome> {
           backgroundColor: Colors.white,
           backgroundImage: room.imgUrl == null || room.imgUrl!.isEmpty
               ? ExactAssetImage("assets/default_group_icon.png")
-              : NetworkImage(URL + "images/" + room.imgUrl!) as ImageProvider,
+              : ImageDatabaseService.getImageByImageId(room.imgUrl!)
+                  as ImageProvider,
         ),
         title: Text(room.name),
         onTap: () => Navigator.of(context)

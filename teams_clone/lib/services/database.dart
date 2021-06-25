@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
@@ -101,8 +102,8 @@ class ChatDatabaseService {
   }
 
   static Future sendMessage(
-      String msg, String roomId, String uid, bool isMedia) async {
-    var body = jsonEncode({'messageText': msg, 'isMedia': isMedia});
+      String msg, String roomId, String uid, String type) async {
+    var body = jsonEncode({'messageText': msg, 'type': type});
     http.Response res = await http.post(
         Uri.parse(_chatUrl + "room/message/" + roomId),
         headers: {'authorisation': uid, 'Content-Type': 'application/json'},
@@ -200,5 +201,31 @@ class CalendarDatabaseService {
   static Future<bool> deleteEventFromEventId(String eventId) async {
     http.Response res = await http.delete(Uri.parse(_eventsUrl + eventId));
     return res.statusCode == 200;
+  }
+}
+
+class ImageDatabaseService {
+  static String _imagesUrl = URL + "images/";
+  static Dio _dio = Dio();
+
+  static NetworkImage getImageByImageId(String id) {
+    return NetworkImage(_imagesUrl + id);
+  }
+
+  static Future<String> uploadImage(String path, bool filter) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(path),
+      'filter': filter,
+    });
+
+    Response res = await _dio.post(_imagesUrl, data: formData);
+    String imgId;
+    print(res.data);
+    if (res.statusCode != 200)
+      imgId = '';
+    else
+      imgId = res.data;
+
+    return imgId;
   }
 }

@@ -42,7 +42,7 @@ class ChatRoom {
       backgroundColor: Colors.white,
       backgroundImage: imgUrl == null || imgUrl!.isEmpty
           ? ExactAssetImage("assets/default_group_icon.png")
-          : NetworkImage(URL + "images/" + imgUrl!) as ImageProvider,
+          : ImageDatabaseService.getImageByImageId(imgUrl!) as ImageProvider,
     );
   }
 
