@@ -11,6 +11,7 @@ import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat_details.dart';
 import 'package:teams_clone/screens/chat/pick_location.dart';
+import 'package:teams_clone/screens/meet/meet.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
@@ -111,6 +112,27 @@ class _ChatState extends State<Chat> {
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => ChatDetails(_room))),
       ),
+      actions: [
+        IconButton(
+            onPressed: () =>
+                joinMeeting(_room.roomId, _user!, name: _room.name),
+            icon: Icon(Icons.video_call_outlined)),
+        PopupMenuButton(
+          onSelected: (choice) async {
+            switch (choice) {
+              case 'Chat details':
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => ChatDetails(_room)));
+                break;
+            }
+          },
+          icon: Icon(Icons.more_vert),
+          itemBuilder: (context) => ['Chat details']
+              .map(
+                  (choice) => PopupMenuItem(child: Text(choice), value: choice))
+              .toList(),
+        ),
+      ],
       bottom: TabBar(
         labelColor: PURPLE_COLOR,
         labelStyle: TextStyle(fontWeight: FontWeight.bold),

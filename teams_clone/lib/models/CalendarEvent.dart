@@ -7,7 +7,7 @@ class CalendarEvent {
   CalendarEvent.fromJson(Map<String, dynamic> json) {
     id = json['_id'];
     title = json['title'];
-    startDate = DateTime.parse(json['startTime']);
-    endDate = DateTime.parse(json['endTime']);
+    startDate = DateTime.parse(json['startTime']).toLocal();
+    endDate = DateTime.parse(json['endTime']).toLocal();
   }
 }

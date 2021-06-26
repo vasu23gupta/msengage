@@ -42,6 +42,17 @@ const List<String> DAYS_3CHAR = [
   "Sat",
   "Sun"
 ];
+
+const List<String> DAYS_FULL = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+];
+
 const List<String> MONTHS_3CHAR = [
   "Jan",
   "Feb",

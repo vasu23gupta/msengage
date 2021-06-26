@@ -6,7 +6,6 @@ import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/add_users.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
 import 'package:teams_clone/screens/home.dart';
-import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
 
@@ -121,34 +120,33 @@ class _ChatDetailsState extends State<ChatDetails> {
 
   Positioned _editImageButton() {
     return Positioned(
-        bottom: 0,
-        right: 0,
-        height: 30,
-        width: 30,
-        child: PopupMenuButton(
-          onSelected: (choice) async {
-            switch (choice) {
-              case 'Edit':
-                String? path = await _pickFile();
-                String? newImg;
-                if (path != null)
-                  newImg =
-                      await ChatDatabaseService.changeRoomIcon(_room, path);
-                setState(() => _room.imgUrl = newImg);
-                break;
+      bottom: 0,
+      right: 0,
+      height: 30,
+      width: 30,
+      child: PopupMenuButton(
+        onSelected: (choice) async {
+          switch (choice) {
+            case 'Edit':
+              String? path = await _pickFile();
+              String? newImg;
+              if (path != null)
+                newImg = await ChatDatabaseService.changeRoomIcon(_room, path);
+              setState(() => _room.imgUrl = newImg);
+              break;
 
-              case 'Remove':
-                bool done = await ChatDatabaseService.removeRoomIcon(_room);
-                if (done) setState(() => _room.imgUrl = null);
-                break;
-            }
-          },
-          icon: Icon(Icons.edit),
-          itemBuilder: (context) => ['Edit', 'Remove']
-              .map(
-                  (choice) => PopupMenuItem(child: Text(choice), value: choice))
-              .toList(),
-        ));
+            case 'Remove':
+              bool done = await ChatDatabaseService.removeRoomIcon(_room);
+              if (done) setState(() => _room.imgUrl = null);
+              break;
+          }
+        },
+        icon: Icon(Icons.edit),
+        itemBuilder: (context) => ['Edit', 'Remove']
+            .map((choice) => PopupMenuItem(child: Text(choice), value: choice))
+            .toList(),
+      ),
+    );
   }
 
   Future<String?> _pickFile() async {

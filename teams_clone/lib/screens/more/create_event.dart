@@ -60,8 +60,7 @@ class _CreateEventState extends State<CreateEvent> {
                   _room!.events.add(event);
                 }
                 Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
+                Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (_) => Calendar(room: _room)));
               },
               icon: Icon(Icons.check))
