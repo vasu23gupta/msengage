@@ -4,17 +4,21 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart' hide Coords;
 import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat_details.dart';
+import 'package:teams_clone/screens/chat/pick_location.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
 import 'package:profanity_filter/profanity_filter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:map_launcher/map_launcher.dart';
 
 class Chat extends StatefulWidget {
   Chat(this.room);
@@ -27,7 +31,7 @@ class _ChatState extends State<Chat> {
   late ChatRoom _room;
   User? _user;
   TextEditingController _enterMsgController = TextEditingController();
-  PlatformFile? pFile;
+  PlatformFile? _pFile;
   bool _uploading = false;
   bool _loading = true;
   late double _h;
@@ -38,6 +42,7 @@ class _ChatState extends State<Chat> {
   String _lastMsgBy = '';
   bool _showMediaSheet = false;
   String _msgType = "text";
+  Map<String, dynamic>? _locationResult;
 
   @override
   void initState() {
@@ -136,14 +141,15 @@ class _ChatState extends State<Chat> {
               return Container(
                 height: _h * 0.8,
                 child: ListView(
-                    reverse: true,
-                    controller: _scrollController,
-                    shrinkWrap: true,
-                    children: _room.messages
-                        .map((e) => _buildChatMessageTile(e))
-                        .toList()
-                        .reversed
-                        .toList()),
+                  reverse: true,
+                  controller: _scrollController,
+                  shrinkWrap: true,
+                  children: _room.messages
+                      .map((e) => _buildChatMessageTile(e))
+                      .toList()
+                      .reversed
+                      .toList(),
+                ),
               );
             },
           ),
@@ -214,7 +220,7 @@ class _ChatState extends State<Chat> {
       child: Column(
         children: [
           ElevatedButton(
-            onPressed: () {},
+            onPressed: _pickLocation,
             child: Icon(
               Icons.location_on_outlined,
               color: Colors.red,
@@ -255,24 +261,34 @@ class _ChatState extends State<Chat> {
                 // minLines: null,
                 // maxLines: null,
                 // expands: true,
-                enabled: pFile == null,
+                enabled: _msgType == "text",
                 controller: _enterMsgController,
                 decoration: InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey)),
-                    border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey)),
-                    hintText: pFile == null ? "Enter message" : pFile!.name),
+                  focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey)),
+                  border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey)),
+                  hintText: _msgType == "text"
+                      ? "Enter message"
+                      : _msgType == "location"
+                          ? _locationResult!['place']
+                          : _pFile!.name,
+                ),
               ),
             ),
             _uploading
-                ? CircularProgressIndicator()
+                ? Container(
+                    child: CircularProgressIndicator(),
+                    height: 23,
+                    width: 23,
+                    margin: const EdgeInsets.all(10),
+                  )
                 : IconButton(
                     icon: Icon(Icons.close, color: Colors.black),
                     onPressed: () {
                       _enterMsgController.clear();
-                      _msgType = "text";
-                      if (pFile != null) setState(() => pFile = null);
+                      _pFile = null;
+                      setState(() => _msgType = "text");
                     },
                   ),
             IconButton(
@@ -292,23 +308,24 @@ class _ChatState extends State<Chat> {
         if (_room.censoring) msg = _filter.censor(msg);
         break;
       case "file":
-        msg = pFile!.name;
+        msg = _pFile!.name;
         setState(() => _uploading = true);
         UploadTask? task = FirebaseStorage.instance
             .ref()
             .child(_room.roomId)
-            .child(pFile!.name)
-            .putFile(File(pFile!.path!));
+            .child(_pFile!.name)
+            .putFile(File(_pFile!.path!));
         await task.then((TaskSnapshot snapshot) {});
         setState(() => _uploading = false);
         break;
       case "image":
         setState(() => _uploading = true);
         msg = await ImageDatabaseService.uploadImage(
-            pFile!.path!, _room.censoring);
+            _pFile!.path!, _room.censoring);
         setState(() => _uploading = false);
         break;
       case "location":
+        msg = jsonEncode(_locationResult);
         break;
     }
     if (msg.isNotEmpty) {
@@ -317,8 +334,8 @@ class _ChatState extends State<Chat> {
 
       if (res.statusCode == 200) {
         _enterMsgController.clear();
-        _msgType = "text";
-        if (pFile != null) setState(() => pFile = null);
+        _pFile = null;
+        setState(() => _msgType = "text");
       }
     }
   }
@@ -327,6 +344,13 @@ class _ChatState extends State<Chat> {
       msg.userId == _user!.uid ? _buildMyMsgTile(msg) : _buildOtherMsgTile(msg);
 
   Widget _buildMyMsgTile(ChatMessage msg) {
+    Map<String, dynamic>? location;
+    LatLng? coords;
+    if (msg.type == "location") {
+      location = jsonDecode(msg.msg);
+      coords = LatLng(location!['lat'], location['lon']);
+    }
+
     Widget res = Align(
       alignment: Alignment.centerRight,
       child: Container(
@@ -363,6 +387,54 @@ class _ChatState extends State<Chat> {
                   style: TextStyle(color: Colors.white, fontSize: _w * 0.045),
                 ),
               ),
+            if (msg.type == "location")
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: _h * 0.2,
+                    width: _w * 0.6,
+                    child: FlutterMap(
+                      options: MapOptions(
+                        onTap: (latlng) async => await MapLauncher.showMarker(
+                          title: location!['place'],
+                          mapType: MapType.google,
+                          coords: Coords(coords!.latitude, coords.longitude),
+                        ),
+                        allowPanning: false,
+                        center: coords,
+                      ),
+                      layers: [
+                        TileLayerOptions(
+                          urlTemplate:
+                              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                          subdomains: ['a', 'b', 'c'],
+                        ),
+                        MarkerLayerOptions(
+                          markers: [
+                            Marker(
+                              point: coords!,
+                              builder: (_) => Icon(
+                                Icons.location_on_rounded,
+                                color: PURPLE_COLOR,
+                                size: _w * 0.1,
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: _w * 0.6,
+                    child: Text(
+                      location!['place'],
+                      style:
+                          TextStyle(color: Colors.white, fontSize: _w * 0.045),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
@@ -372,12 +444,19 @@ class _ChatState extends State<Chat> {
   }
 
   Widget _buildOtherMsgTile(ChatMessage msg) {
+    Map<String, dynamic>? location;
+    LatLng? coords;
+    if (msg.type == "location") {
+      location = jsonDecode(msg.msg);
+      coords = LatLng(location!['lat'], location['lon']);
+    }
     Widget res = Container(
       alignment: Alignment.centerLeft,
       margin: _lastMsgBy == msg.userId
           ? EdgeInsets.only(left: 6)
           : EdgeInsets.fromLTRB(6, 6, 6, 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _getUserIcon(msg),
           Container(
@@ -398,23 +477,79 @@ class _ChatState extends State<Chat> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
-                      child: Text(msg.msg,
-                          style: TextStyle(
-                              color: Colors.black, fontSize: _w * 0.045)),
-                    ),
-                    // if (msg.isMedia)
-                    //   IconButton(
-                    //     onPressed: () async {
-                    //       if (msg.isMedia)
-                    //         await launch(await FirebaseStorage.instance
-                    //             .ref()
-                    //             .child(_room.roomId)
-                    //             .child(msg.msg)
-                    //             .getDownloadURL());
-                    //     },
-                    //     icon: Icon(Icons.download),
-                    //   ),
+                    if (msg.type == "file" || msg.type == "text")
+                      Flexible(
+                        child: Text(msg.msg,
+                            style: TextStyle(
+                                color: Colors.black, fontSize: _w * 0.045)),
+                      ),
+                    if (msg.type == "image")
+                      Image(
+                        image: ImageDatabaseService.getImageByImageId(msg.msg),
+                        height: _h * 0.3,
+                        fit: BoxFit.contain,
+                      ),
+                    if (msg.type == "file")
+                      IconButton(
+                        onPressed: () async {
+                          await launch(await FirebaseStorage.instance
+                              .ref()
+                              .child(_room.roomId)
+                              .child(msg.msg)
+                              .getDownloadURL());
+                        },
+                        icon: Icon(Icons.download),
+                      ),
+                    if (msg.type == "location")
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            height: _h * 0.2,
+                            width: _w * 0.6,
+                            child: FlutterMap(
+                              options: MapOptions(
+                                onTap: (latlng) async =>
+                                    await MapLauncher.showMarker(
+                                  title: location!['place'],
+                                  mapType: MapType.google,
+                                  coords: Coords(
+                                      coords!.latitude, coords.longitude),
+                                ),
+                                allowPanning: false,
+                                center: coords,
+                              ),
+                              layers: [
+                                TileLayerOptions(
+                                  urlTemplate:
+                                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                  subdomains: ['a', 'b', 'c'],
+                                ),
+                                MarkerLayerOptions(
+                                  markers: [
+                                    Marker(
+                                      point: coords!,
+                                      builder: (_) => Icon(
+                                        Icons.location_on_rounded,
+                                        color: PURPLE_COLOR,
+                                        size: _w * 0.1,
+                                      ),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                          Container(
+                            width: _w * 0.6,
+                            child: Text(
+                              location!['place'],
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: _w * 0.045),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ],
@@ -439,8 +574,8 @@ class _ChatState extends State<Chat> {
                         .substring(0, 2)
                         .toUpperCase()))
                 : CircleAvatar(
-                    backgroundImage:
-                        NetworkImage(_room.users[msg.userId]!.imgUrl!));
+                    backgroundImage: ImageDatabaseService.getImageByImageId(
+                        _room.users[msg.userId]!.imgUrl!));
   }
 
   Future<void> _pickFile() async {
@@ -448,7 +583,7 @@ class _ChatState extends State<Chat> {
     _enterMsgController.clear();
     if (pickedFile != null)
       setState(() {
-        pFile = pickedFile.files.first;
+        _pFile = pickedFile.files.first;
         _msgType = "file";
       });
   }
@@ -459,8 +594,18 @@ class _ChatState extends State<Chat> {
     _enterMsgController.clear();
     if (pickedFile != null)
       setState(() {
-        pFile = pickedFile.files.first;
+        _pFile = pickedFile.files.first;
         _msgType = "image";
+      });
+  }
+
+  Future<void> _pickLocation() async {
+    Map<String, dynamic>? result = await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => PickLocation()));
+    if (result != null)
+      setState(() {
+        _msgType = "location";
+        _locationResult = result;
       });
   }
 }

@@ -38,6 +38,8 @@ dependencies:
   table_calendar:
   firebase_storage:
   dio:
+  flutter_map:
+  map_launcher:
 
 dev_dependencies:
   flutter_test:

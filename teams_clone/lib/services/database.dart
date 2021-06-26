@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
+import 'package:latlong2/latlong.dart';
 
 const String URL = "http://10.0.2.2:3000/";
 
@@ -227,5 +228,26 @@ class ImageDatabaseService {
       imgId = res.data;
 
     return imgId;
+  }
+}
+
+class Utils {
+  static String _revGeoApiKey = "pk.2f59bc5282019634c04ee4b55f7e9798";
+  static String _revGeoUrl = "https://eu1.locationiq.com/v1/reverse.php";
+
+  static Future<Map<String, dynamic>> reverseGeocode(LatLng coords) async {
+    Map<String, dynamic> queryParams = {
+      'key': _revGeoApiKey,
+      'lat': coords.latitude,
+      'lon': coords.longitude,
+      'format': 'json'
+    };
+    Response res = await Dio().get(_revGeoUrl, queryParameters: queryParams);
+    Map<String, dynamic> result = {
+      'place': res.data['display_name'],
+      'lat': coords.latitude,
+      'lon': coords.longitude
+    };
+    return result;
   }
 }
