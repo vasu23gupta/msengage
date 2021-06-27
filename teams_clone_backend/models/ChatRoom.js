@@ -15,7 +15,7 @@ const chatRoomSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    events:{
+    events: {
       type: [String],
       required: true
     }
@@ -76,8 +76,11 @@ chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, na
       };
     }
 
-    const savedImage = await image.save();
-    const imgUrl = savedImage._id;
+    var imgUrl;
+    if (image) {
+      const savedImage = await image.save();
+      imgUrl = savedImage._id;
+    }
     const newRoom = await this.create({ userIds, chatInitiator, name, imgUrl });
     return {
       isNew: true,

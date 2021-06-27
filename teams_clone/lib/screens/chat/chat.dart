@@ -313,11 +313,13 @@ class _ChatState extends State<Chat> {
                       setState(() => _msgType = "text");
                     },
                   ),
-            IconButton(
-              onPressed: _sendMessage,
-              icon: Icon(Icons.send),
-              color: PURPLE_COLOR,
-            )
+            !_uploading
+                ? IconButton(
+                    onPressed: _sendMessage,
+                    icon: Icon(Icons.send),
+                    color: PURPLE_COLOR,
+                  )
+                : Container()
           ],
         ),
       );

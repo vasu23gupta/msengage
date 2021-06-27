@@ -68,34 +68,7 @@ class _CalendarState extends State<Calendar> {
             ),
           ),
         );
-      _eventWidgets.add(
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 1,
-                  blurRadius: 1,
-                  offset: Offset(0, 2), // changes position of shadow
-                ),
-              ],
-            ),
-            child: ListTile(
-              title: Text(event.title, style: TextStyle(fontSize: _w * 0.05)),
-              subtitle: Text(
-                "${event.startDate.hour}:${event.startDate.minute} - ${event.endDate.day} ${MONTHS_3CHAR[event.endDate.month - 1]} ${event.endDate.year}, ${event.endDate.hour}:${event.endDate.minute}",
-                style: TextStyle(color: Colors.black),
-              ),
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => EventDetails(event, room: _room))),
-            ),
-          ),
-        ),
-      );
+      _eventWidgets.add(_buildEventTile(event));
       _lastDate = event.startDate;
     }
     setState(() => _loading = false);
@@ -137,8 +110,32 @@ class _CalendarState extends State<Calendar> {
           );
   }
 
-  bool isSameDay(DateTime a, DateTime b) {
-    if (a.day == b.day && a.month == b.month && a.year == b.year) return true;
-    return false;
+  Widget _buildEventTile(CalendarEvent event) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5),
+              spreadRadius: 1,
+              blurRadius: 1,
+              offset: Offset(0, 2), // changes position of shadow
+            ),
+          ],
+        ),
+        child: ListTile(
+          title: Text(event.title, style: TextStyle(fontSize: _w * 0.05)),
+          subtitle: Text(
+            "${event.startDate.hour}:${event.startDate.minute} - ${event.endDate.day} ${MONTHS_3CHAR[event.endDate.month - 1]} ${event.endDate.year}, ${event.endDate.hour}:${event.endDate.minute}",
+            style: TextStyle(color: Colors.black),
+          ),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => EventDetails(event, room: _room))),
+        ),
+      ),
+    );
   }
 }

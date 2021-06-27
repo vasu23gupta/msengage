@@ -14,6 +14,20 @@ class ChatRoom {
   bool censoring = false;
 
   ChatRoom.fromHomeJson(Map<String, dynamic> json) {
+    roomId = json['chatRoomId'];
+    name = json['name'];
+    imgUrl = json['imgUrl'];
+    messages.add(ChatMessage(
+        id: json['messageId'],
+        msg: json['message'],
+        roomId: roomId,
+        type: json['type'],
+        userId: json['postedByUser']['_id'],
+        dateTime: DateTime.parse(json['createdAt']).toLocal()));
+    users[json['postedByUser']['_id']] = AppUser.fromJson(json['postedByUser']);
+  }
+
+  ChatRoom.fromSearchJson(Map<String, dynamic> json) {
     roomId = json['_id'];
     name = json['name'];
     imgUrl = json['imgUrl'];

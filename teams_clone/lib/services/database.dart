@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
+import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -54,6 +55,26 @@ class UserDBService {
     if (res.statusCode == 200) user.updatePhotoURL(null);
     return res.statusCode == 200;
   }
+
+  static Future<Map<String, dynamic>> search(String query, String uid) async {
+    http.Response res = await http.get(Uri.parse(_usersUrl + "search/" + query),
+        headers: {'authorisation': uid});
+    Map<String, dynamic> result = {};
+    result['rooms'] = <ChatRoom>[];
+    result['events'] = <CalendarEvent>[];
+    result['messages'] = <ChatMessage>[];
+    var json = jsonDecode(res.body);
+    for (var room in json['rooms'])
+      result['rooms'].add(ChatRoom.fromSearchJson(room));
+
+    for (var event in json['events'])
+      result['events'].add(CalendarEvent.fromJson(event));
+
+    for (var msg in json['messages'])
+      result['messages'].add(ChatMessage.fromJson(msg));
+
+    return result;
+  }
 }
 
 class ChatDatabaseService {
@@ -87,7 +108,8 @@ class ChatDatabaseService {
       'chatInitiator': uid,
       'name': room.name,
       'userIds': ids,
-      'image': await MultipartFile.fromFile(room.imgUrl!),
+      'image':
+          room.imgUrl == null ? "" : await MultipartFile.fromFile(room.imgUrl!),
     });
     Response res = await _dio.post(_chatUrl + "initiate/", data: formData);
     var resBody = res.data;
@@ -195,6 +217,7 @@ class CalendarDatabaseService {
     http.Response res = await http.get(Uri.parse(_eventsUrl + "user/" + uid));
     List<CalendarEvent> result = [];
     var body = jsonDecode(res.body);
+    print(body);
     for (var item in body) result.add(CalendarEvent.fromJson(item));
     return result;
   }

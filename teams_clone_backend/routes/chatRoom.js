@@ -208,12 +208,17 @@ router.post('/initiate', upload.single('image'), async (req, res) => {
     else allUserIds = [userIds, chatInitiator];
     console.log(allUserIds);
     var f = req.file;
-    var image = new Image();
-    image.img.data = fs.readFileSync(f.path);
-    image.img.contentType = f.mimetype;
+    var image;
+    if (f) {
+      image = new Image();
+      image.img.data = fs.readFileSync(f.path);
+      image.img.contentType = f.mimetype;
+    }
     const chatRoom = await ChatRoomModel.initiateChat(allUserIds, chatInitiator, name, image);
+    await ChatMessageModel.createPostInChatRoom(chatRoom.chatRoomId, "Created the group", chatInitiator, "text");
     return res.status(200).json({ success: true, chatRoom });
   } catch (error) {
+    console.log(error);
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
@@ -222,16 +227,15 @@ router.post('/initiate', upload.single('image'), async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const currentLoggedUser = req.get('authorisation');
-    // const options = {
-    //   page: parseInt(req.query.page) || 0,
-    //   limit: parseInt(req.query.limit) || 10,
-    // };
+    const options = {
+      page: parseInt(req.query.page) || 0,
+      limit: parseInt(req.query.limit) || 1000,
+    };
     const rooms = await ChatRoomModel.getChatRoomsByUserId(currentLoggedUser);
-    //const roomIds = rooms.map(room => room._id);
-    // const recentConversation = await ChatMessageModel.getRecentConversation(
-    //   roomIds, options, currentLoggedUser
-    // );
-    return res.status(200).json({ success: true, conversation: rooms });
+    const roomIds = rooms.map(room => room._id.toString());
+    const recentConversation = await ChatMessageModel.getRecentConversation(roomIds, options);
+    console.log(recentConversation.length);
+    return res.status(200).json({ success: true, conversation: recentConversation });
   } catch (error) {
     return res.status(error.status || 500).json({ success: false, error: error })
   }

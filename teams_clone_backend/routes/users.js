@@ -4,6 +4,11 @@ const User = require('../models/User');
 const fs = require('fs');
 const Image = require('../models/Image');
 const multer = require('multer');
+const Event = require('../models/Event');
+const mongoose = require("mongoose");
+const EventModel = mongoose.model('Events');
+const ChatRoomModel = mongoose.model('ChatRoom');
+const ChatMessage = require('../models/ChatMessage.js');
 
 const storage = multer.diskStorage({
     filename: function (req, file, cb) {
@@ -80,6 +85,34 @@ router.patch('/removeIcon/:uid', async (req, res, next) => {
         await User.updateOne({ _id: uid }, { $set: { imgUrl: undefined } });
         await Image.deleteOne({ _id: req.body.old });
         res.status(200).json({ success: true });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(err.status || 500).json({ success: false, error: err })
+    }
+});
+
+router.get('/search/:query', async (req, res) => {
+    try {
+        const query = req.params.query;
+        const userId = req.get('authorisation');
+        var reg = new RegExp(query, "i");
+        var rooms = await ChatRoomModel.getChatRoomsByUserId(userId);
+        const roomIds = rooms.map(room => room._id.toString());
+        let events = await EventModel.getEventsByUserId(userId, reg);
+        let messages = await ChatMessage.find({
+            chatRoomId: { $in: roomIds },
+            message: { $regex: reg },
+            $or: [
+                { type: "text" },
+                { type: "file" }
+            ]
+        });
+        rooms = await ChatRoomModel.find({ userIds: { $in: [userId] }, name: { $regex: reg } });
+        //console.log(rooms);
+        //console.log(events);
+        //console.log(messages);
+        res.json({ rooms: rooms, events: events, messages: messages });
     }
     catch (err) {
         console.log(err);
