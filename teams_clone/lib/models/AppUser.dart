@@ -14,7 +14,9 @@ class AppUser {
   }
 
   AppUser.fromFirebaseUser(User user) {
-    name = user.displayName!;
+    name = user.displayName == null
+        ? user.email!.split('@')[0]
+        : user.displayName!;
     id = user.uid;
     imgUrl = user.photoURL;
     email = user.email!;

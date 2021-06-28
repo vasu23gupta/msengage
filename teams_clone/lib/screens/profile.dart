@@ -19,7 +19,7 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
-    _appUser = AppUser.fromFirebaseUser(_user!);
+    _appUser = widget.appUser;
   }
 
   late User? _user;
@@ -54,7 +54,7 @@ class _ProfileState extends State<Profile> {
                       radius: 50,
                       backgroundImage: ImageDatabaseService.getImageByImageId(
                           _appUser.imgUrl!)),
-              _editImageButton()
+              if (_user!.uid == _appUser.id) _editImageButton()
             ],
           )),
           SizedBox(
@@ -67,7 +67,7 @@ class _ProfileState extends State<Profile> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 0, 8),
-            child: Text(_user!.email!,
+            child: Text(_appUser.email,
                 style: TextStyle(
                     color: Colors.indigo,
                     decoration: TextDecoration.underline,

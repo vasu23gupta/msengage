@@ -274,7 +274,7 @@ class _ChatState extends State<Chat> {
               style: ElevatedButton.styleFrom(
                 shape: CircleBorder(),
                 primary: PURPLE_COLOR,
-                minimumSize: Size(25, 25),
+                minimumSize: Size(_w * 0.06, _w * 0.06),
               ),
             ),
             SizedBox(
@@ -301,8 +301,8 @@ class _ChatState extends State<Chat> {
             _uploading
                 ? Container(
                     child: CircularProgressIndicator(),
-                    height: 23,
-                    width: 23,
+                    height: _w * 0.056,
+                    width: _w * 0.056,
                     margin: const EdgeInsets.all(10),
                   )
                 : IconButton(

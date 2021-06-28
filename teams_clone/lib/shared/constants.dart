@@ -2,20 +2,10 @@ import 'package:flutter/material.dart';
 
 const textInputDecoration = InputDecoration(
   counterText: "",
-  //fillColor: Colors.white,
-  filled: true,
   enabledBorder: OutlineInputBorder(
-    borderSide: BorderSide(
-      //color: Colors.white,
-      width: 2.0,
-    ),
-  ),
+      borderSide: BorderSide(color: Colors.grey, width: 0.5)),
   focusedBorder: OutlineInputBorder(
-    borderSide: BorderSide(
-      //color: Colors.pink,
-      width: 2.0,
-    ),
-  ),
+      borderSide: BorderSide(color: Colors.grey, width: 0.5)),
 );
 
 const PURPLE_COLOR = Color(0xff505AC9);

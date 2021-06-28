@@ -97,7 +97,9 @@ class _HomeState extends State<Home> {
             ListTile(
               leading: _userIcon,
               title: Text(
-                _user!.displayName!,
+                _user!.displayName == null
+                    ? _user!.email!.split('@')[0]
+                    : _user!.displayName!,
                 style: TextStyle(
                     fontWeight: FontWeight.bold, fontSize: _w * 0.045),
               ),

@@ -62,7 +62,19 @@ class _PickLocationState extends State<PickLocation> {
                   fixedSize: Size(_w * 0.9, _h * 0.055),
                 ),
               ),
-            )
+            ),
+            Positioned(
+                top: _h * 0.015,
+                left: _h * 0.015,
+                child: FloatingActionButton(
+                  tooltip: "Back",
+                  onPressed: Navigator.of(context).pop,
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: Colors.black,
+                  ),
+                  backgroundColor: Colors.white,
+                ))
           ],
         ),
       ),

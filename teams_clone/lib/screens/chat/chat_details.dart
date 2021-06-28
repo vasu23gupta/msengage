@@ -6,6 +6,7 @@ import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/add_users.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
 import 'package:teams_clone/screens/home.dart';
+import 'package:teams_clone/screens/profile.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
 
@@ -103,14 +104,17 @@ class _ChatDetailsState extends State<ChatDetails> {
             shrinkWrap: true,
             children: _room.users.values
                 .map((e) => ListTile(
-                    leading: e.imgUrl == null || e.imgUrl!.isEmpty
-                        ? CircleAvatar(
-                            child: Text(e.name.substring(0, 2).toUpperCase()))
-                        : CircleAvatar(
-                            backgroundImage:
-                                ImageDatabaseService.getImageByImageId(
-                                    e.imgUrl!)),
-                    title: Text(e.name)))
+                      leading: e.imgUrl == null || e.imgUrl!.isEmpty
+                          ? CircleAvatar(
+                              child: Text(e.name.substring(0, 2).toUpperCase()))
+                          : CircleAvatar(
+                              backgroundImage:
+                                  ImageDatabaseService.getImageByImageId(
+                                      e.imgUrl!)),
+                      title: Text(e.name),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => Profile(appUser: e))),
+                    ))
                 .toList(),
           )
         ],

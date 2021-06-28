@@ -116,7 +116,7 @@ class _ChatHomeState extends State<ChatHome> {
               : ImageDatabaseService.getImageByImageId(room.imgUrl!)
                   as ImageProvider,
         ),
-        title: Text(room.name, style: TextStyle(fontSize: _w * 0.05)),
+        title: Text(room.name, style: TextStyle(fontSize: _w * 0.04)),
         subtitle: msg != null
             ? Padding(
                 padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
@@ -125,7 +125,7 @@ class _ChatHomeState extends State<ChatHome> {
                   overflow: TextOverflow.fade,
                   text: TextSpan(
                     style: TextStyle(
-                        fontSize: _w * 0.045, color: Colors.grey[600]),
+                        fontSize: _w * 0.035, color: Colors.grey[600]),
                     children: [
                       TextSpan(text: room.users[msg.userId]!.name),
                       TextSpan(text: ": "),

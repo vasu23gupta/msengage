@@ -40,6 +40,7 @@ dependencies:
   dio:
   flutter_map:
   map_launcher:
+  cached_network_image:
 
 dev_dependencies:
   flutter_test:

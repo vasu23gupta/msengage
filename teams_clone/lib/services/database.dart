@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
@@ -232,8 +234,8 @@ class ImageDatabaseService {
   static String _imagesUrl = URL + "images/";
   static Dio _dio = Dio();
 
-  static NetworkImage getImageByImageId(String id) {
-    return NetworkImage(_imagesUrl + id);
+  static CachedNetworkImageProvider getImageByImageId(String id) {
+    return CachedNetworkImageProvider(_imagesUrl + id);
   }
 
   static Future<String> uploadImage(String path, bool filter) async {
@@ -255,10 +257,9 @@ class ImageDatabaseService {
 }
 
 class Utils {
-  static String _revGeoApiKey = "pk.2f59bc5282019634c04ee4b55f7e9798";
-  static String _revGeoUrl = "https://eu1.locationiq.com/v1/reverse.php";
-
   static Future<Map<String, dynamic>> reverseGeocode(LatLng coords) async {
+    String _revGeoApiKey = "pk.2f59bc5282019634c04ee4b55f7e9798";
+    String _revGeoUrl = "https://eu1.locationiq.com/v1/reverse.php";
     Map<String, dynamic> queryParams = {
       'key': _revGeoApiKey,
       'lat': coords.latitude,

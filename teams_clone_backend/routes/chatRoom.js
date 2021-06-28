@@ -234,7 +234,6 @@ router.get('/', async (req, res) => {
     const rooms = await ChatRoomModel.getChatRoomsByUserId(currentLoggedUser);
     const roomIds = rooms.map(room => room._id.toString());
     const recentConversation = await ChatMessageModel.getRecentConversation(roomIds, options);
-    console.log(recentConversation.length);
     return res.status(200).json({ success: true, conversation: recentConversation });
   } catch (error) {
     return res.status(error.status || 500).json({ success: false, error: error })
