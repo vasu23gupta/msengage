@@ -9,6 +9,7 @@ import 'package:teams_clone/screens/chat/name_image.dart';
 import 'package:teams_clone/screens/search.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
+import 'package:teams_clone/shared/constants.dart';
 
 class ChatHome extends StatefulWidget {
   const ChatHome({Key? key}) : super(key: key);
@@ -99,16 +100,19 @@ class _ChatHomeState extends State<ChatHome> {
   //   );
   // }
 
-  Padding _buildChatRoomTile(ChatRoom room) {
+  Container _buildChatRoomTile(ChatRoom room) {
     ChatMessage? msg = room.messages.isEmpty ? null : room.messages[0];
-    return Padding(
+    return Container(
       padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(width: 0.5, color: Colors.grey)),
+      ),
       child: ListTile(
         leading: CircleAvatar(
           radius: _w * 0.07,
           backgroundColor: Colors.white,
           backgroundImage: room.imgUrl == null || room.imgUrl!.isEmpty
-              ? ExactAssetImage("assets/default_group_icon.png")
+              ? ExactAssetImage(DEFAULT_GROUP_IMG)
               : ImageDatabaseService.getImageByImageId(room.imgUrl!)
                   as ImageProvider,
         ),

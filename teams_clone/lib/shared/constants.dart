@@ -33,6 +33,8 @@ ThemeData themeData = ThemeData(
       BottomNavigationBarThemeData(selectedItemColor: PURPLE_COLOR),
 );
 
+const String DEFAULT_GROUP_IMG = "assets/default_group_icon.png";
+
 const List<String> DAYS_3CHAR = [
   "Mon",
   "Tue",

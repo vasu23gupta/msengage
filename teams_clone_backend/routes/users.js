@@ -107,7 +107,7 @@ router.get('/search/:query', async (req, res) => {
                 { type: "text" },
                 { type: "file" }
             ]
-        });
+        }).populate('postedByUser');
         rooms = await ChatRoomModel.find({ userIds: { $in: [userId] }, name: { $regex: reg } });
         //console.log(rooms);
         //console.log(events);

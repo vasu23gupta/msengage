@@ -52,7 +52,7 @@ class ChatRoom {
   //   return CircleAvatar(
   //     backgroundColor: Colors.white,
   //     backgroundImage: imgUrl == null || imgUrl!.isEmpty
-  //         ? ExactAssetImage("assets/default_group_icon.png")
+  //         ? ExactAssetImage("DEFAULT_GROUP_IMG")
   //         : ImageDatabaseService.getImageByImageId(imgUrl!) as ImageProvider,
   //   );
   // }

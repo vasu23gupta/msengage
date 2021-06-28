@@ -71,7 +71,7 @@ class UserDBService {
       result['events'].add(CalendarEvent.fromJson(event));
 
     for (var msg in json['messages'])
-      result['messages'].add(ChatMessage.fromJson(msg));
+      result['messages'].add(ChatMessage.fromSearchJson(msg));
 
     return result;
   }

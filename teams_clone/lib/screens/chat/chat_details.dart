@@ -50,7 +50,7 @@ class _ChatDetailsState extends State<ChatDetails> {
                   backgroundColor: Colors.white,
                   radius: 70,
                   backgroundImage: _room.imgUrl == null || _room.imgUrl!.isEmpty
-                      ? ExactAssetImage("assets/default_group_icon.png")
+                      ? ExactAssetImage(DEFAULT_GROUP_IMG)
                       : ImageDatabaseService.getImageByImageId(_room.imgUrl!)
                           as ImageProvider,
                 ),
