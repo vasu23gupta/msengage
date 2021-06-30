@@ -89,6 +89,11 @@ class _HomeState extends State<Home> {
         ),
         title: Text(_appBarTitles[_currentIndex], style: APPBAR_TEXT_STYLE),
         elevation: 0,
+        actions: [
+          IconButton(
+              onPressed: () => joinMeeting(_appUser.name, _user!),
+              icon: Icon(Icons.video_call_rounded))
+        ],
       ),
       drawer: Drawer(
         child: ListView(

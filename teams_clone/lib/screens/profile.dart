@@ -89,14 +89,15 @@ class _ProfileState extends State<Profile> {
             case 'Edit':
               String? path = await _pickFile();
               String? newImg;
-              if (path != null)
-                newImg =
-                    await UserDBService.changeUserIcon(_user!, _appUser, path);
-              setState(() => _appUser.imgUrl = newImg);
+              if (path != null) {
+                newImg = await UserDBService.changeUserIcon(_user!, path);
+                _user!.updatePhotoURL(newImg);
+                setState(() => _appUser.imgUrl = newImg);
+              }
               break;
 
             case 'Remove':
-              bool done = await UserDBService.removeUserIcon(_user!, _appUser);
+              bool done = await UserDBService.removeUserIcon(_user!);
               if (done) setState(() => _appUser.imgUrl = null);
               break;
           }

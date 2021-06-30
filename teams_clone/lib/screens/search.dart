@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
@@ -10,7 +9,6 @@ import 'package:teams_clone/screens/chat/chat_home.dart';
 import 'package:teams_clone/screens/more/event_details.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class Search extends StatefulWidget {
   const Search({Key? key}) : super(key: key);

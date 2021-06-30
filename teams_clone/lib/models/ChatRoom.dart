@@ -3,39 +3,63 @@ import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatMessage.dart';
 
+/// A chat room or group or team.
 class ChatRoom {
-  late String roomId;
+  /// unique room id
+  late String _roomId;
+
+  /// group name
   late String name;
+
+  /// chat room icon url, can be null if no icon is set.
   String? imgUrl;
+
+  /// list of messages, includes all messages downloaded from database and
+  /// new messages coming live.
   List<ChatMessage> messages = [];
+
+  /// list of event ids.
   List<String> eventIds = [];
+
+  /// list of events.
   List<CalendarEvent> events = [];
+
+  /// user ids mapped with appuser objects.
   HashMap<String, AppUser> users = HashMap();
+
+  /// whether to censor chat messages. censors english bad words and images
+  /// containing nudity.
   bool censoring = false;
 
+  /// create chat room from home from mongo document. includes room id, name,
+  /// image url, last message and app user object of sender of last message.
   ChatRoom.fromHomeJson(Map<String, dynamic> json) {
-    roomId = json['chatRoomId'];
+    _roomId = json['chatRoomId'];
     name = json['name'];
     imgUrl = json['imgUrl'];
     messages.add(ChatMessage(
-        id: json['messageId'],
-        msg: json['message'],
-        roomId: roomId,
-        type: json['type'],
-        userId: json['postedByUser']['_id'],
-        dateTime: DateTime.parse(json['createdAt']).toLocal()));
+      id: json['messageId'],
+      msg: json['message'],
+      roomId: _roomId,
+      type: json['type'],
+      userId: json['postedByUser']['_id'],
+      dateTime: DateTime.parse(json['createdAt']).toLocal(),
+    ));
     users[json['postedByUser']['_id']] = AppUser.fromJson(json['postedByUser']);
   }
 
+  /// create chat room from mongo document during search.
   ChatRoom.fromSearchJson(Map<String, dynamic> json) {
-    roomId = json['_id'];
+    _roomId = json['_id'];
     name = json['name'];
     imgUrl = json['imgUrl'];
   }
 
+  /// create chat room from mongo document, includes all messages in this room,
+  /// and app user details of all users.
   ChatRoom.fromJsonWithMessages(Map<String, dynamic> json) {
     name = json['room']['name'];
-    roomId = json['room']['_id'];
+    _roomId = json['room']['_id'];
     imgUrl = json['room']['imgUrl'];
     censoring = json['room']['censoring'];
     for (var item in json['conversation'])
@@ -46,7 +70,13 @@ class ChatRoom {
     for (String item in json['room']['events']) eventIds.add(item);
   }
 
-  ChatRoom({required this.roomId});
+  /// create room just from room id, used when creating new chat room.
+  ChatRoom({required roomId}) {
+    this._roomId = roomId;
+  }
+
+  /// get unique room id.
+  String get roomId => _roomId;
 
   // Widget _makeIcon() {
   //   return CircleAvatar(

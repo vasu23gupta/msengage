@@ -54,7 +54,7 @@ class _PickLocationState extends State<PickLocation> {
                 ),
                 onPressed: () async {
                   Map<String, dynamic> result =
-                      await Utils.reverseGeocode(_controller.center);
+                      await reverseGeocode(_controller.center);
                   Navigator.pop(context, result);
                 },
                 style: ElevatedButton.styleFrom(

@@ -326,7 +326,6 @@ class _ChatState extends State<Chat> {
 
   Future<void> _sendMessage() async {
     String msg = _enterMsgController.text.trim();
-    Response res;
     switch (_msgType) {
       case "text":
         if (_room.censoring) msg = _filter.censor(msg);
@@ -353,10 +352,10 @@ class _ChatState extends State<Chat> {
         break;
     }
     if (msg.isNotEmpty) {
-      res = await ChatDatabaseService.sendMessage(
+      bool sent = await ChatDatabaseService.sendMessage(
           msg, _room.roomId, _user!.uid, _msgType);
 
-      if (res.statusCode == 200) {
+      if (sent) {
         _enterMsgController.clear();
         _pFile = null;
         setState(() => _msgType = "text");
