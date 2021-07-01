@@ -1,2 +1,2 @@
-image filtering.
+test nudity detector.
 assistant

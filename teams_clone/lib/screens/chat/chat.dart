@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' hide Coords;
-import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
@@ -388,13 +387,12 @@ class _ChatState extends State<Chat> {
           children: [
             if (msg.type == "file")
               IconButton(
-                onPressed: () async {
-                  await launch(await FirebaseStorage.instance
-                      .ref()
-                      .child(_room.roomId)
-                      .child(msg.msg)
-                      .getDownloadURL());
-                },
+                onPressed: () async => await launch(await FirebaseStorage
+                    .instance
+                    .ref()
+                    .child(_room.roomId)
+                    .child(msg.msg)
+                    .getDownloadURL()),
                 icon: Icon(Icons.download),
               ),
             if (msg.type == "image")

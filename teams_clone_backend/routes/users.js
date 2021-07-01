@@ -120,17 +120,4 @@ router.get('/search/:query', async (req, res) => {
     }
 });
 
-// router.patch('/:userId', async (req, res) => {
-//     try {
-//         const updatedUser = await User.updateOne({ _id: req.params.userId }, {
-//             $push: {
-//                 vendors: req.body.vendorId
-//             },
-//         });
-//         res.json(updatedUser);
-//     } catch (err) {
-//         res.json({ message: err });
-//     }
-// });
-
 module.exports = router;

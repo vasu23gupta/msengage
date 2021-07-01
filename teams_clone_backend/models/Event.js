@@ -2,22 +2,10 @@ const mongoose = require("mongoose");
 const ChatRoomModel = mongoose.model('ChatRoom');
 
 const EventSchema = mongoose.Schema({
-    title: {
-        type: String,
-        required: true,
-    },
-    startTime: {
-        type: Date,
-        required: true,
-    },
-    endTime: {
-        type: Date,
-        required: true,
-    },
-    createdBy: {
-        type: String,
-        required: true,
-    },
+    title: { type: String, required: true },
+    startTime: { type: Date, required: true },
+    endTime: { type: Date, required: true },
+    createdBy: { type: String, required: true },
 }, { timestamps: true });
 
 EventSchema.statics.getEventsByUserId = async function (userId, query = new RegExp(".*", "i")) {
@@ -31,16 +19,14 @@ EventSchema.statics.getEventsByUserId = async function (userId, query = new RegE
             }
         }
         var events = [];
-        for (let i = 0; i < eventIds.length; i++) {
-            var doc = await this.find({ _id: eventIds[i], title: { $regex: query } });
-            events.push(doc);
-        }
+        var docs = await this.find({ _id: { $in: eventIds }, title: { $regex: query } });
+        events.push(...docs);
+
         const userEvents = await this.find({ createdBy: userId, title: { $regex: query } });
         for (let i = 0; i < userEvents.length; i++) {
             var doc = userEvents[i];
             if (events.some(e => e['_id'].equals(doc['_id']))) {
                 /* events already contains this doc */
-                //events.push(doc);
             }
             else events.push(doc);
         }

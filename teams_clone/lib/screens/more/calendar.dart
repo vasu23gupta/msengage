@@ -101,10 +101,11 @@ class _CalendarState extends State<Calendar> {
                   availableGestures: AvailableGestures.all,
                   headerVisible: false,
                 ),
-                ListView(
-                  shrinkWrap: true,
-                  children: _eventWidgets,
-                ),
+                // ListView(
+                //   shrinkWrap: true,
+                //   children: _eventWidgets,
+                // ),
+                ..._eventWidgets
               ],
             ),
           );
