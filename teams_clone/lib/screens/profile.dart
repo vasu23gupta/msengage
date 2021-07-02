@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:teams_clone/models/AppUser.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Profile extends StatefulWidget {
   final AppUser appUser;
@@ -57,21 +58,25 @@ class _ProfileState extends State<Profile> {
               if (_user!.uid == _appUser.id) _editImageButton()
             ],
           )),
-          SizedBox(
-            height: 10,
-          ),
+          SizedBox(height: 10),
           Divider(color: Colors.grey[300], thickness: 1, indent: _w * 0.04),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 0, 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 0, 0),
             child: Text("Email", style: TextStyle(fontSize: _w * 0.035)),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 0, 8),
-            child: Text(_appUser.email,
+            padding: const EdgeInsets.fromLTRB(8, 0, 0, 8),
+            child: TextButton(
+              onPressed: () =>
+                  launch("mailto:${_appUser.email}?subject=&body="),
+              child: Text(
+                _appUser.email,
                 style: TextStyle(
                     color: Colors.indigo,
                     decoration: TextDecoration.underline,
-                    fontSize: _w * 0.045)),
+                    fontSize: _w * 0.045),
+              ),
+            ),
           ),
         ],
       ),

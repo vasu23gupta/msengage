@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:teams_clone/screens/more/create_event.dart';
 import 'package:teams_clone/screens/more/event_details.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class Calendar extends StatefulWidget {
   final ChatRoom? room;
@@ -22,17 +24,33 @@ class _CalendarState extends State<Calendar> {
   bool _loading = true;
   late List<CalendarEvent> _events;
   DateTime? _lastDate;
-  List<Widget> _eventWidgets = [];
+  late List<Widget> _eventWidgets;
   late double _w;
   late double _h;
+  final ItemScrollController _itemScrollController = ItemScrollController();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
+  HashMap<int, int> _datesAndHeadingIndices = HashMap();
 
   @override
   void initState() {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
     _room = widget.room;
-    // _w = MediaQuery.of(context).size.width;
-    // _h = MediaQuery.of(context).size.height;
+    _eventWidgets = <Widget>[
+      SizedBox(height: 10),
+      TableCalendar(
+        firstDay: DateTime.now(),
+        lastDay: DateTime.now().add(Duration(days: 150)),
+        focusedDay: DateTime.now(),
+        availableGestures: AvailableGestures.all,
+        headerVisible: false,
+        onDaySelected: (a, b) => _itemScrollController.scrollTo(
+          index: _datesAndHeadingIndices[_dateToNumber(b)]!,
+          duration: Duration(milliseconds: 500),
+        ),
+      ),
+    ];
     getEvents();
   }
 
@@ -48,31 +66,38 @@ class _CalendarState extends State<Calendar> {
       _events = _room!.events;
     }
     _events.sort((a, b) => a.startDate.isAfter(b.startDate) ? 1 : -1);
+    _buildWidgets();
+    setState(() => _loading = false);
+  }
+
+  void _buildWidgets() {
     for (CalendarEvent event in _events) {
-      if (_lastDate == null || !isSameDay(_lastDate!, event.startDate))
-        _eventWidgets.add(
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Text(
-                  '${event.startDate.day} ${MONTHS_3CHAR[event.startDate.month - 1]}  ',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: _w * 0.05),
-                ),
-                Text(
-                  '${DAYS_FULL[event.startDate.weekday - 1]}',
-                  style: TextStyle(fontSize: _w * 0.04),
-                )
-              ],
-            ),
-          ),
-        );
+      if (_lastDate == null || !isSameDay(_lastDate!, event.startDate)) {
+        _eventWidgets.add(_buildDateHeading(event.startDate));
+        _datesAndHeadingIndices[_dateToNumber(event.startDate)] =
+            _eventWidgets.length - 1;
+      }
       _eventWidgets.add(_buildEventTile(event));
       _lastDate = event.startDate;
     }
-    setState(() => _loading = false);
   }
+
+  Padding _buildDateHeading(DateTime dateTime) => Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Text(
+              '${dateTime.day} ${MONTHS_3CHAR[dateTime.month - 1]}  ',
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, fontSize: _w * 0.05),
+            ),
+            Text(
+              '${DAYS_FULL[dateTime.weekday - 1]}',
+              style: TextStyle(fontSize: _w * 0.04),
+            )
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -91,24 +116,21 @@ class _CalendarState extends State<Calendar> {
                   MaterialPageRoute(builder: (_) => CreateEvent(room: _room))),
               child: Icon(Icons.add),
             ),
-            body: ListView(
-              children: <Widget>[
-                SizedBox(height: 10),
-                TableCalendar(
-                  firstDay: DateTime.now(),
-                  lastDay: DateTime.now().add(Duration(days: 150)),
-                  focusedDay: DateTime.now(),
-                  availableGestures: AvailableGestures.all,
-                  headerVisible: false,
-                ),
-                // ListView(
-                //   shrinkWrap: true,
-                //   children: _eventWidgets,
-                // ),
-                ..._eventWidgets
-              ],
+            body: ScrollablePositionedList.builder(
+              itemCount: _eventWidgets.length,
+              itemBuilder: (context, index) => _eventWidgets[index],
+              itemScrollController: _itemScrollController,
+              itemPositionsListener: _itemPositionsListener,
             ),
           );
+  }
+
+  int _dateToNumber(DateTime dateTime) {
+    int res = 0;
+    res += dateTime.year;
+    res += dateTime.month * 10000;
+    res += dateTime.day * 1000000;
+    return res;
   }
 
   Widget _buildEventTile(CalendarEvent event) {

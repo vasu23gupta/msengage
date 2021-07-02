@@ -250,8 +250,6 @@ class _SearchState extends State<Search> {
       _widgets[1] = _buildChats();
       _widgets[2] = _buildMessages();
       _widgets[3] = _buildEvents();
-      //_widgets[0].add(ListTile(title: Text("Chats")));
-
       setState(() {});
     } else {
       _rooms.clear();
