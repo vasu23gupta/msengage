@@ -5,17 +5,21 @@ const ChatRoom = require('../models/ChatRoom');
 const mongoose = require('mongoose');
 const EventModel = mongoose.model('Events');
 
-// get all events (for testing)
-router.get('/', async (req, res) => {
-    try {
-        const events = await Event.find();
-        res.json(events);
-    } catch (err) {
-        res.json({ message: err });
-    }
-});
-
-//create event
+/**
+ * create event
+ * request:
+ *   body: {
+ *       title: {String} title of event
+ *       startTime: {DateTime} date and time of start of event
+ *       endTime: {DateTime} date and time of end of event
+ *       createdBy: {String} user id of creator of event
+ *       roomId: {String} room id of event, optional
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.post('/', async (req, res) => {
     try {
         var event = new Event({
@@ -40,6 +44,16 @@ router.post('/', async (req, res) => {
     }
 });
 
+/**
+ * gets event with id eventId
+ * request:
+ *   parameters: 
+ *     eventId: event id
+ * response:
+ *   json: {
+ *     event
+ *   }
+ */
 router.get('/:eventId', async (req, res) => {
     try {
         const event = await Event.findById(req.params.eventId);
@@ -49,6 +63,16 @@ router.get('/:eventId', async (req, res) => {
     }
 });
 
+/**
+ * gets all events a user has
+ * request:
+ *   parameters: 
+ *     userId: user id
+ * response:
+ *   json: {
+ *     events: list of events
+ *   }
+ */
 router.get('/user/:userId', async (req, res) => {
     try {
         var events = await EventModel.getEventsByUserId(req.params.userId);
@@ -58,14 +82,24 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
+/**
+ * deletes event with id eventId
+ * request:
+ *   parameters: 
+ *     eventId: event id
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.delete('/:eventId', async (req, res) => {
     try {
-        await ChatRoom.updateOne({ events: { $in: req.params.eventId } }, {$pull: {events: req.params.eventId}});
+        await ChatRoom.updateOne({ events: { $in: req.params.eventId } }, { $pull: { events: req.params.eventId } });
         const event = await Event.findByIdAndDelete(req.params.eventId);
-        res.json(event);
+        res.json({ 'success': true });
     } catch (err) {
         console.log(err);
-        res.json({ message: err });
+        res.json({ 'success': false, message: err });
     }
 });
 

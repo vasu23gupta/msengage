@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Image = require('../models/Image');
 
 /*
 https://www.freecodecamp.org/news/create-a-professional-node-express/
@@ -11,18 +12,11 @@ const chatRoomSchema = new mongoose.Schema(
     chatInitiator: String,
     name: String,
     imgUrl: String,
-    censoring: {
-      type: Boolean,
-      default: false,
-    },
-    events: {
-      type: [String],
-      required: true
-    }
+    censoring: { type: Boolean, default: false },
+    events: { type: [String], required: true }
   },
   {
-    timestamps: true,
-    collection: "chatrooms",
+    timestamps: true, collection: "chatrooms"
   }
 );
 
@@ -55,11 +49,15 @@ chatRoomSchema.statics.getChatRoomByRoomId = async function (roomId) {
 }
 
 /**
+ * Create new chat room if a room with same users and room name doesn't exists,
+ * otherwise return that room.
  * @param {Array} userIds - array of strings of userIds
  * @param {String} chatInitiator - user who initiated the chat
  * @param {String} name - name of chatroom
+ * @param {Object} file - file of image of room icon
+ * @return {Object} chat room
  */
-chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, name, image) {
+chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, name, file) {
   try {
     const availableRoom = await this.findOne({
       userIds: {
@@ -77,8 +75,8 @@ chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, na
     }
 
     var imgUrl;
-    if (image) {
-      const savedImage = await image.save();
+    if (file) {
+      const savedImage = await Image.uploadImage(file, false);
       imgUrl = savedImage._id;
     }
     const newRoom = await this.create({ userIds, chatInitiator, name, imgUrl });

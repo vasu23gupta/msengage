@@ -39,6 +39,7 @@ async function connectDB() {
 }
 connectDB();
 
+//home page
 app.get('/', (req, res) => {
   res.send('Welcome to Teams clone by Vasu Gupta');
 })

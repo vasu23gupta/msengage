@@ -1,39 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const fs = require('fs');
 const Image = require('../models/Image');
-const multer = require('multer');
 const Event = require('../models/Event');
 const mongoose = require("mongoose");
 const EventModel = mongoose.model('Events');
 const ChatRoomModel = mongoose.model('ChatRoom');
 const ChatMessage = require('../models/ChatMessage.js');
+const upload = require('../shared/multer_configuration');
 
-const storage = multer.diskStorage({
-    filename: function (req, file, cb) {
-        cb(null, file.originalname);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 15 * 1024 * 1024
-    }
-});
-
-// get all users (for testing)
-router.get('/', async (req, res) => {
-    try {
-        const users = await User.find();
-        res.json(users);
-    } catch (err) {
-        res.json({ message: err });
-    }
-});
-
-//add user
+/**
+ * add firebase user to database
+ * request:
+ *   headers: {
+ *     authorisation: {String} uid of user of firebase user.
+ *   }
+ *   body: {
+ *       username: {String} username of user
+ *       email: {String} email of user
+ *   }
+ * response:
+ *   json: {
+ *     savedUser: created user
+ *   }
+ */
 router.post('/', async (req, res) => {
     try {
         var userId = req.get('authorisation');
@@ -50,11 +40,20 @@ router.post('/', async (req, res) => {
     }
 });
 
-//get userid from email
+/**
+ * get userid from email
+ * request:
+ *   parameters: 
+ *     email: email
+ * response:
+ *   json: {
+ *     user: user id
+ *   }
+ */
 router.get('/:email', async (req, res) => {
     try {
         var em = req.params.email;
-        const user = await User.findOne({ email: em }, { _id: 1 });
+        const user = await User.findOne({ email: em }, { _id: 1 }); // get only the id
         res.json(user);
     } catch (err) {
         console.log(err);
@@ -62,14 +61,28 @@ router.get('/:email', async (req, res) => {
     }
 });
 
+/**
+ * change user icon
+ * request:
+ *   parameters: 
+ *     uid: user id
+ *   form data: {
+ *       image: image
+ *   }
+ *   body: {
+ *       old: {String} image id of existing icon
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *     imgUrl: id of new image
+ *   }
+ */
 router.patch('/changeIcon/:uid', upload.single('image'), async (req, res) => {
     try {
         const uid = req.params.uid;
         var f = req.file;
-        var image = new Image();
-        image.img.data = fs.readFileSync(f.path);
-        image.img.contentType = f.mimetype;
-        const savedImage = await image.save();
+        const savedImage = await Image.uploadImage(f, false);
         const oldImg = req.body.old;
         if (oldImg) await Image.deleteOne({ _id: oldImg });
         await User.updateOne({ _id: uid }, { $set: { imgUrl: savedImage._id } });
@@ -79,6 +92,19 @@ router.patch('/changeIcon/:uid', upload.single('image'), async (req, res) => {
     }
 });
 
+/**
+ * remove image
+ * request:
+ *   parameters: 
+ *     uid: user id
+ *   body: {
+ *       old: {String} image id of existing icon
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.patch('/removeIcon/:uid', async (req, res, next) => {
     try {
         var uid = req.params.uid;
@@ -92,6 +118,21 @@ router.patch('/removeIcon/:uid', async (req, res, next) => {
     }
 });
 
+/**
+ * search for events, chat rooms, messages
+ * request:
+ *   parameters: 
+ *     query: search query
+ *   headers: {
+ *     authorisation: {String} uid of user searching
+ *   }
+ * response:
+ *   json: {
+ *     rooms: list of chat rooms
+ *     events: list of events
+ *     messages: list of messages
+ *   }
+ */
 router.get('/search/:query', async (req, res) => {
     try {
         const query = req.params.query;
@@ -109,14 +150,11 @@ router.get('/search/:query', async (req, res) => {
             ]
         }).populate('postedByUser');
         rooms = await ChatRoomModel.find({ userIds: { $in: [userId] }, name: { $regex: reg } });
-        //console.log(rooms);
-        //console.log(events);
-        //console.log(messages);
         res.json({ rooms: rooms, events: events, messages: messages });
     }
     catch (err) {
         console.log(err);
-        return res.status(err.status || 500).json({ success: false, error: err })
+        return res.status(err.status || 500).json({ error: err })
     }
 });
 

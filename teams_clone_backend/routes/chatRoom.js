@@ -1,27 +1,30 @@
 const mongoose = require('mongoose');
 const express = require('express');
 require('../models/ChatRoom.js');
-const fs = require('fs');
 const ChatRoomModel = mongoose.model('ChatRoom');
 const ChatMessageModel = require('../models/ChatMessage.js');
 const UserModel = require('../models/User.js');
 const router = express.Router();
 const Image = require('../models/Image');
-const multer = require('multer');
+const upload = require('../shared/multer_configuration');
 
-const storage = multer.diskStorage({
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 15 * 1024 * 1024
-  }
-});
-
+/**
+ * sends message in room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *   headers: {
+ *     authorisation: {String} uid of user sending the message.
+ *   }
+ *   body: {
+ *       messageText: {String} message content
+ *       type: {String} type of message ("text", "location", "image", "file")
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.post('/room/message/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
@@ -30,55 +33,87 @@ router.post('/room/message/:roomId', async (req, res) => {
     const currentLoggedUser = req.get('authorisation');
     const post = await ChatMessageModel.createPostInChatRoom(roomId, messageText, currentLoggedUser, type);
     global.io.sockets.in(roomId).emit('new message', { message: post });
-    return res.status(200).json({ success: true, post: post });
+    return res.status(200).json({ success: true });
   } catch (error) {
     console.log(error);
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
 
+/**
+ * changes room name of room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *   body: {
+ *       name: {String} new room name
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.patch('/room/changeRoomName/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
-    const room = await ChatRoomModel.updateOne({ _id: roomId }, {
-      $set: {
-        name: req.body.name
-      }
-    });
-    return res.status(200).json({
-      success: true,
-      message: "Operation performed successfully"
-    });
+    const room = await ChatRoomModel.updateOne(
+      { _id: roomId },
+      { $set: { name: req.body.name } }
+    );
+    return res.status(200).json({ success: true });
   } catch (error) {
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
 
+/**
+ * change room censorship of room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *   body: {
+ *       censoring: {boolean} whether censoring or not
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.patch('/room/changeRoomCensorship/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
-    const room = await ChatRoomModel.updateOne({ _id: roomId }, {
-      $set: {
-        censoring: req.body.censoring
-      }
-    });
-    return res.status(200).json({
-      success: true,
-      message: "Operation performed successfully"
-    });
+    const room = await ChatRoomModel.updateOne(
+      { _id: roomId },
+      { $set: { censoring: req.body.censoring } }
+    );
+    return res.status(200).json({ success: true });
   } catch (error) {
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
 
+/**
+ * changes icon of room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *   form data: {
+ *       image: image
+ *   }
+ *   body: {
+ *       old: {String} existing icon id
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *     imgUrl: {String} new image id
+ *   }
+ */
 router.patch('/room/changeRoomIcon/:roomId', upload.single('image'), async (req, res) => {
   try {
     const roomId = req.params.roomId;
     var f = req.file;
-    var image = new Image();
-    image.img.data = fs.readFileSync(f.path);
-    image.img.contentType = f.mimetype;
-    const savedImage = await image.save();
+    const savedImage = await Image.uploadImage(f, false);
     const oldImg = req.body.old;
     if (oldImg) await Image.deleteOne({ _id: oldImg });
     const room = await ChatRoomModel.updateOne({ _id: roomId }, { $set: { imgUrl: savedImage._id } });
@@ -88,7 +123,20 @@ router.patch('/room/changeRoomIcon/:roomId', upload.single('image'), async (req,
   }
 });
 
-router.patch('/room/removeRoomIcon/:roomId', async (req, res, next) => {
+/**
+ * remove icon of room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *   body: {
+ *       old: {String} existing icon id
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
+router.patch('/room/removeRoomIcon/:roomId', async (req, res) => {
   try {
     var roomId = req.params.roomId;
     await ChatRoomModel.updateOne({ _id: roomId }, { $set: { imgUrl: undefined } });
@@ -101,76 +149,75 @@ router.patch('/room/removeRoomIcon/:roomId', async (req, res, next) => {
   }
 });
 
-router.patch('/room/join/:roomId', async (req, res) => {
-  try {
-    const roomId = req.params.roomId;
-    const room = await ChatRoomModel.updateOne({ _id: roomId }, {
-      $push: {
-        userIds: req.get('authorisation')
-      }
-    });
-    return res.status(200).json({
-      success: true,
-      message: "Operation performed successfully"
-    });
-  } catch (error) {
-    return res.status(error.status || 500).json({ success: false, error: error })
-  }
-});
-
+/**
+ * add users in room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *   body: {
+ *       users: {[String]} array of users ids to be added
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.patch('/room/addUsers/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
-    console.log(req.body.users);
-    const room = await ChatRoomModel.updateOne({ _id: roomId }, {
-      $push: {
-        userIds: { $each: req.body.users }
-      }
-    });
-    console.log(room);
-    return res.status(200).json({
-      success: true,
-      message: "Operation performed successfully"
-    });
+    const room = await ChatRoomModel.updateOne(
+      { _id: roomId },
+      { $push: { userIds: { $each: req.body.users } } }
+    );
+    return res.status(200).json({ success: true });
   } catch (error) {
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
 
+/**
+ * leave room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *   headers: {
+ *     authorisation: {String} uid of user leaving the room.
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *   }
+ */
 router.patch('/room/leave/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
-    const room = await ChatRoomModel.updateOne({ _id: roomId }, {
-      $pull: {
-        userIds: req.get('authorisation')
-      }
+    const room = await ChatRoomModel.updateOne(
+      { _id: roomId }, {
+      $pull: { userIds: req.get('authorisation') }
     });
-    return res.status(200).json({
-      success: true,
-      message: "Operation performed successfully"
-    });
+    return res.status(200).json({ success: true });
   } catch (error) {
     console.log(error);
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
 
-router.delete('/room/:roomId', async (req, res) => {
-  try {
-    const roomId = req.params.roomId;
-    const room = await ChatRoomModel.deleteOne({ _id: roomId });
-    const messages = await ChatMessageModel.deleteMany({ chatRoomId: roomId })
-    return res.status(200).json({
-      success: true,
-      message: "Operation performed successfully",
-      deletedRoomsCount: room.deletedCount,
-      deletedMessagesCount: messages.deletedCount,
-    });
-  } catch (error) {
-    return res.status(error.status || 500).json({ success: false, error: error })
-  }
-});
-
+/**
+ * gets all messages, users, and event ids of room with room id req.params.roomId
+ * request:
+ *   parameters: 
+ *     roomId: room id
+ *  query paramters:
+ *     page: {Number} page number for pagination, optional
+ *     limit: {Number} number of messages to be sent in reponse, optional
+ * response:
+ *   json: {
+ *     success: true/false,
+ *     conversation: array of chat messages,
+ *     users: array of users in this room,
+ *     room: chat room with room details and event ids
+ *   }
+ */
 router.get('/room/:roomId', async (req, res) => {
   try {
     const roomId = req.params.roomId;
@@ -198,24 +245,40 @@ router.get('/room/:roomId', async (req, res) => {
   }
 });
 
-//create new chat room
+/**
+ * creates new chat room or returns an existing one if a room with same users
+ * and name exists.
+ * request:
+ *   body: {
+ *       users: {[String]} array of users ids to be added,
+ *       name: {String} room name
+ *       chatInitiator: {String} uid of user creating the room
+ *   }
+ *   form data: {
+ *       image: {image} room icon
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false
+ *     chatRoom: {ChatRoom Object} create or existing chat room
+ *   }
+ */
 router.post('/initiate', upload.single('image'), async (req, res) => {
   try {
-    const { userIds, name, chatInitiator } = req.body;
+    var { userIds, name, chatInitiator } = req.body;
     var allUserIds;
     // = [...userIds, chatInitiator];
     if (Array.isArray(userIds)) allUserIds = [...userIds, chatInitiator];
     else allUserIds = [userIds, chatInitiator];
-    console.log(allUserIds);
     var f = req.file;
-    var image;
-    if (f) {
-      image = new Image();
-      image.img.data = fs.readFileSync(f.path);
-      image.img.contentType = f.mimetype;
-    }
-    const chatRoom = await ChatRoomModel.initiateChat(allUserIds, chatInitiator, name, image);
-    await ChatMessageModel.createPostInChatRoom(chatRoom.chatRoomId, "Created the group", chatInitiator, "text");
+    if (!name) name = "New chat";
+    const chatRoom = await ChatRoomModel.initiateChat(allUserIds, chatInitiator, name, f);
+    await ChatMessageModel.createPostInChatRoom(
+      chatRoom.chatRoomId,
+      "Created the group",
+      chatInitiator,
+      "text"
+    );
     return res.status(200).json({ success: true, chatRoom });
   } catch (error) {
     console.log(error);
@@ -224,6 +287,18 @@ router.post('/initiate', upload.single('image'), async (req, res) => {
 });
 
 //get all rooms im in
+/**
+ * gets all rooms a user is in, the rooms' last message and the message's sender.
+ * request:
+ *   headers: {
+ *     authorisation: {String} uid of user sending the message.
+ *   }
+ * response:
+ *   json: {
+ *     success: true/false,
+ *     conversationg: chat rooms
+ *   }
+ */
 router.get('/', async (req, res) => {
   try {
     const currentLoggedUser = req.get('authorisation');
@@ -239,6 +314,39 @@ router.get('/', async (req, res) => {
     return res.status(error.status || 500).json({ success: false, error: error })
   }
 });
+
+// router.delete('/room/:roomId', async (req, res) => {
+//   try {
+//     const roomId = req.params.roomId;
+//     const room = await ChatRoomModel.deleteOne({ _id: roomId });
+//     const messages = await ChatMessageModel.deleteMany({ chatRoomId: roomId })
+//     return res.status(200).json({
+//       success: true,
+//       message: "Operation performed successfully",
+//       deletedRoomsCount: room.deletedCount,
+//       deletedMessagesCount: messages.deletedCount,
+//     });
+//   } catch (error) {
+//     return res.status(error.status || 500).json({ success: false, error: error })
+//   }
+// });
+
+// router.patch('/room/join/:roomId', async (req, res) => {
+//   try {
+//     const roomId = req.params.roomId;
+//     const room = await ChatRoomModel.updateOne({ _id: roomId }, {
+//       $push: {
+//         userIds: req.get('authorisation')
+//       }
+//     });
+//     return res.status(200).json({
+//       success: true,
+//       message: "Operation performed successfully"
+//     });
+//   } catch (error) {
+//     return res.status(error.status || 500).json({ success: false, error: error })
+//   }
+// });
 
 // //rooms a third person is in
 // router.get('/getRoomsByUserId/:userId', async (req, res) => {

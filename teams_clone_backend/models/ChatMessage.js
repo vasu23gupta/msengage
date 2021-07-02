@@ -8,34 +8,24 @@ https://github.com/adeelibr/node-playground/tree/master/chapter-1-chat
 const chatMessageSchema = new mongoose.Schema(
     {
         chatRoomId: String,
-        message: {
-            type: String,
-            required: true,
-        },
-        postedByUser: {
-            type: String,
-            ref: 'Users',
-            required: true,
-        },
-        type: {
-            type: String,
-            required: true,
-        }
+        message: { type: String, required: true },
+        postedByUser: { type: String, ref: 'Users', required: true },
+        type: { type: String, required: true }
     },
     {
-        timestamps: true,
-        collection: "chatmessages",
+        timestamps: true, collection: "chatmessages"
     }
 );
 
 /**
  * This method will create a post in chat
- * @param {String} roomId - id of chat room
+ * @param {String} chatRoomId - id of chat room
  * @param {String} message - message you want to post in the chat room
  * @param {String} postedByUser - user who is posting the message
- * @param {String} type - whether the message is media or normal message
+ * @param {String} type - whether the message is media or normal message, 
+ *      can be "text", "image", "file", "location".
+ * @return {Object} message.
  */
-
 chatMessageSchema.statics.createPostInChatRoom = async function (chatRoomId, message, postedByUser, type) {
     try {
         const post = await this.create({
@@ -51,7 +41,10 @@ chatMessageSchema.statics.createPostInChatRoom = async function (chatRoomId, mes
 }
 
 /**
+ * This method will get list of messages of a room.
  * @param {String} chatRoomId - chat room id
+ * @param {{ page, limit }} options - pagination options
+ * @return {[Object]} array of chat messages.
  */
 chatMessageSchema.statics.getConversationByRoomId = async function (chatRoomId, options = {}) {
     try {
@@ -69,8 +62,10 @@ chatMessageSchema.statics.getConversationByRoomId = async function (chatRoomId, 
 }
 
 /**
+ * This method will get list of rooms a user is in, their last message and it's sender.
  * @param {Array} chatRoomIds - chat room ids
  * @param {{ page, limit }} options - pagination options
+ * @return {Object} chat room with last message and sender of that message.
  */
 chatMessageSchema.statics.getRecentConversation = async function (chatRoomIds, options) {
     try {
