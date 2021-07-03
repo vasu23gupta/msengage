@@ -32,6 +32,91 @@ class _AddUsersState extends State<AddUsers> {
       _room.users.forEach((id, user) => _existingUserEmails.add(user.email));
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(),
+      body: Column(
+        children: [
+          _buildEmailTextField(),
+          _buildAddEmailButton(),
+          Wrap(children: _tagWidgets.toList()),
+        ],
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: Text("New chat", style: APPBAR_TEXT_STYLE),
+      iconTheme: APPBAR_ICON_THEME,
+      actions: [_buildCreateChatButton()],
+    );
+  }
+
+  TextButton _buildCreateChatButton() {
+    return TextButton(
+      onPressed: _createChat,
+      child: Text("NEXT"),
+      style: TextButton.styleFrom(primary: PURPLE_COLOR),
+    );
+  }
+
+  void _createChat() async {
+    if (_room.roomId.isEmpty) {
+      String? roomId = await ChatDatabaseService.createNewChatRoom(
+          _newEmailsAndIds.values.toList(), _room, _user!.uid);
+      if (roomId != null)
+        Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => Chat(ChatRoom(roomId: roomId))));
+    } else {
+      bool done = await ChatDatabaseService.addUsersToChatRoom(
+          _room.roomId, _newEmailsAndIds.values.toList());
+      if (done) {
+        Navigator.of(context).pop(); //add users
+        Navigator.of(context).pop(); //chat details
+        Navigator.of(context).pop(); //chat
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => Chat(_room)));
+      }
+    }
+  }
+
+  TextField _buildEmailTextField() {
+    return TextField(
+      controller: _addEmailController,
+      decoration: InputDecoration(hintText: "Enter Emails"),
+    );
+  }
+
+  Padding _buildAddEmailButton() {
+    return Padding(
+      padding: EdgeInsets.all(10),
+      child: ElevatedButton(
+        onPressed: _addUser,
+        child: Text('Add Email'),
+      ),
+    );
+  }
+
+  Future _addUser() async {
+    String email = _addEmailController.text;
+    if (email.isNotEmpty &&
+        !_newEmailsAndIds.containsKey(email) &&
+        _user!.email != email &&
+        !_existingUserEmails.contains(email)) {
+      String? id = await UserDBService.getUserIdFromEmail(email);
+      if (id != null) {
+        _newEmails.add(email);
+        _newEmailsAndIds[email] = id;
+        setState(() => _addEmailController.clear());
+      } else
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("User doesnt exist")));
+    } else
+      setState(() => _addEmailController.clear());
+  }
+
   Iterable<Widget> get _tagWidgets sync* {
     for (final String tag in _newEmails)
       yield Padding(
@@ -44,72 +129,5 @@ class _AddUsersState extends State<AddUsers> {
           }),
         ),
       );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("New chat", style: APPBAR_TEXT_STYLE),
-        iconTheme: APPBAR_ICON_THEME,
-        actions: [
-          TextButton(
-            onPressed: () async {
-              if (_room.roomId.isEmpty) {
-                String? roomId = await ChatDatabaseService.createNewChatRoom(
-                    _newEmailsAndIds.values.toList(), _room, _user!.uid);
-                if (roomId != null)
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => Chat(ChatRoom(roomId: roomId))));
-              } else {
-                bool done = await ChatDatabaseService.addUsersToChatRoom(
-                    _room.roomId, _newEmailsAndIds.values.toList());
-                if (done) {
-                  Navigator.of(context).pop(); //add users
-                  Navigator.of(context).pop(); //chat details
-                  Navigator.of(context).pop(); //chat
-                  Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (_) => Chat(_room)));
-                }
-              }
-            },
-            child: Text("NEXT"),
-            style: TextButton.styleFrom(primary: PURPLE_COLOR),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          TextField(
-            controller: _addEmailController,
-            decoration: InputDecoration(hintText: "Enter Emails"),
-          ),
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: ElevatedButton(
-              onPressed: () async {
-                String email = _addEmailController.text;
-                if (email.isNotEmpty &&
-                    !_newEmailsAndIds.containsKey(email) &&
-                    _user!.email != email &&
-                    !_existingUserEmails.contains(email)) {
-                  String? id = await UserDBService.getUserIdFromEmail(email);
-                  if (id != null) {
-                    _newEmails.add(email);
-                    _newEmailsAndIds[email] = id;
-                    setState(() => _addEmailController.clear());
-                  } else
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("User doesnt exist")));
-                } else
-                  setState(() => _addEmailController.clear());
-              },
-              child: Text('Add Email'),
-            ),
-          ),
-          Wrap(children: _tagWidgets.toList()),
-        ],
-      ),
-    );
   }
 }

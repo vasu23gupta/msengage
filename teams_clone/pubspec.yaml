@@ -42,6 +42,7 @@ dependencies:
   map_launcher:
   cached_network_image:
   scrollable_positioned_list: ^0.2.0-nullsafety.0
+  #flutter_sound:
 
 dev_dependencies:
   flutter_test:

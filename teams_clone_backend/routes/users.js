@@ -8,6 +8,7 @@ const EventModel = mongoose.model('Events');
 const ChatRoomModel = mongoose.model('ChatRoom');
 const ChatMessage = require('../models/ChatMessage.js');
 const upload = require('../shared/multer_configuration');
+const cp = require('child_process');
 
 /**
  * add firebase user to database
@@ -157,5 +158,20 @@ router.get('/search/:query', async (req, res) => {
         return res.status(err.status || 500).json({ error: err })
     }
 });
+
+// router.post('/assistant', async (req, res) => {
+//     const query = req.body.query;
+//     var cmd = "python ./assistant.py " + "\"" + query + "\"";
+//     cp.exec(cmd, (err, stdout) => {
+//         if (err) {
+//             console.log(err);
+//             res.setHeader('Content-Type', 'application/json');
+//             res.end(JSON.stringify({ err: err }));
+//         }
+//         else {
+//             res.send(JSON.parse(stdout));
+//         }
+//     });
+// });
 
 module.exports = router;

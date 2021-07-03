@@ -41,45 +41,53 @@ class _CreateEventState extends State<CreateEvent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: APPBAR_ICON_THEME,
-        title: Text("New event", style: APPBAR_TEXT_STYLE),
-        actions: <Widget>[
-          IconButton(
-              onPressed: () async {
-                CalendarEvent event = await CalendarDatabaseService.createEvent(
-                    DateTime(_startDate.year, _startDate.month, _startDate.day,
-                        _startTime.hour, _startTime.minute),
-                    DateTime(_endDate.year, _endDate.month, _endDate.day,
-                        _endTime.hour, _endTime.minute),
-                    _titleController.text,
-                    _user!.uid,
-                    _room == null ? "" : _room!.roomId);
-                if (_room != null) {
-                  _room!.eventIds.add(event.id);
-                  _room!.events.add(event);
-                }
-                Navigator.of(context).pop();
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => Calendar(room: _room)));
-              },
-              icon: Icon(Icons.check))
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: ListView(
         children: <Widget>[
-          ListTile(
-            leading: Icon(Icons.edit),
-            title: TextField(
-              decoration: InputDecoration(hintText: "Title"),
-              controller: _titleController,
-            ),
-          ),
+          _buildTitleTextField(),
           _buildStartDateTile(),
           _buildEndDateTile(),
         ],
       ),
     );
+  }
+
+  ListTile _buildTitleTextField() {
+    return ListTile(
+      leading: Icon(Icons.edit),
+      title: TextField(
+        decoration: InputDecoration(hintText: "Title"),
+        controller: _titleController,
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      iconTheme: APPBAR_ICON_THEME,
+      title: Text("New event", style: APPBAR_TEXT_STYLE),
+      actions: <Widget>[
+        IconButton(onPressed: _createEvent, icon: Icon(Icons.check))
+      ],
+    );
+  }
+
+  Future<void> _createEvent() async {
+    CalendarEvent event = await CalendarDatabaseService.createEvent(
+        DateTime(_startDate.year, _startDate.month, _startDate.day,
+            _startTime.hour, _startTime.minute),
+        DateTime(_endDate.year, _endDate.month, _endDate.day, _endTime.hour,
+            _endTime.minute),
+        _titleController.text,
+        _user!.uid,
+        _room == null ? "" : _room!.roomId);
+    if (_room != null) {
+      _room!.eventIds.add(event.id);
+      _room!.events.add(event);
+    }
+    Navigator.of(context).pop();
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => Calendar(room: _room)));
   }
 
   ListTile _buildStartDateTile() => ListTile(

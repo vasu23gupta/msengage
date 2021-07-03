@@ -19,6 +19,7 @@ import 'package:profanity_filter/profanity_filter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:map_launcher/map_launcher.dart';
+//import 'package:flutter_sound/flutter_sound.dart';
 
 class Chat extends StatefulWidget {
   Chat(this.room);
@@ -53,16 +54,16 @@ class _ChatState extends State<Chat> {
     _getRoom();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    socket.emit("unsubscribe", {"room": _room.roomId});
-  }
-
   Future _getRoom() async {
     _room = await ChatDatabaseService.getChatRoomByRoomId(_room.roomId);
     socket.emit("subscribe", {"room": _room.roomId});
     setState(() => _loading = false);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    socket.emit("unsubscribe", {"room": _room.roomId});
   }
 
   @override
@@ -78,25 +79,7 @@ class _ChatState extends State<Chat> {
               body: TabBarView(
                 children: [
                   _buildChatTab(),
-                  ListView(
-                    children: <Widget>[
-                      ListTile(
-                        leading:
-                            Icon(Icons.calendar_today, color: PURPLE_COLOR),
-                        title: Text("Add an event"),
-                        onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => Calendar(room: _room))),
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.info),
-                        title: Text("Chat details"),
-                        onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => ChatDetails(_room))),
-                      ),
-                    ],
-                  ),
+                  _buildDashboardTab(),
                 ],
               ),
             ),
@@ -132,57 +115,83 @@ class _ChatState extends State<Chat> {
               .toList(),
         ),
       ],
-      bottom: TabBar(
-        labelColor: PURPLE_COLOR,
-        labelStyle: TextStyle(fontWeight: FontWeight.bold),
-        indicatorColor: PURPLE_COLOR,
-        unselectedLabelColor: Colors.black,
-        tabs: [
-          Tab(text: "CHAT"),
-          Tab(text: "DASHBOARD"),
-        ],
-      ),
+      bottom: _buildTabBar(),
     );
   }
 
-  ListView _buildChatTab() => ListView(
-        reverse: true,
-        children: [
-          _showMediaSheet ? _buildMediaSheet() : Container(),
-          _buildInputRow(),
-          StreamBuilder(
-            stream: _chatStream,
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              if (snapshot.hasData) {
-                var json = jsonDecode(jsonEncode(snapshot.data))['message'];
-                ChatMessage cm = ChatMessage.fromJson(json);
-                if (_room.messages.isEmpty || _room.messages.last.id != cm.id)
-                  _room.messages.add(cm);
-              }
-              return Container(
-                height: _h * 0.8,
-                child: ListView(
-                  reverse: true,
-                  controller: _scrollController,
-                  shrinkWrap: true,
-                  children: _room.messages
-                      .map((e) => _buildChatMessageTile(e))
-                      .toList()
-                      .reversed
-                      .toList(),
-                ),
-              );
-            },
-          ),
-        ],
-      );
+  ListView _buildChatTab() {
+    return ListView(
+      reverse: true,
+      children: [
+        _showMediaSheet ? _buildMediaSheet() : Container(),
+        _buildInputRow(),
+        StreamBuilder(
+          stream: _chatStream,
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.hasData) {
+              var json = jsonDecode(jsonEncode(snapshot.data))['message'];
+              ChatMessage cm = ChatMessage.fromJson(json);
+              if (_room.messages.isEmpty || _room.messages.last.id != cm.id)
+                _room.messages.add(cm);
+            }
+            return Container(
+              height: _h * 0.8,
+              child: ListView(
+                reverse: true,
+                controller: _scrollController,
+                shrinkWrap: true,
+                children: _room.messages
+                    .map((e) => _buildChatMessageTile(e))
+                    .toList()
+                    .reversed
+                    .toList(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  ListView _buildDashboardTab() {
+    return ListView(
+      children: <Widget>[
+        ListTile(
+          leading: Icon(Icons.calendar_today, color: PURPLE_COLOR),
+          title: Text("Add an event"),
+          onTap: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => Calendar(room: _room))),
+        ),
+        ListTile(
+          leading: Icon(Icons.info),
+          title: Text("Chat details"),
+          onTap: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => ChatDetails(_room))),
+        ),
+      ],
+    );
+  }
+
+  TabBar _buildTabBar() {
+    return TabBar(
+      labelColor: PURPLE_COLOR,
+      labelStyle: TextStyle(fontWeight: FontWeight.bold),
+      indicatorColor: PURPLE_COLOR,
+      unselectedLabelColor: Colors.black,
+      tabs: [
+        Tab(text: "CHAT"),
+        Tab(text: "DASHBOARD"),
+      ],
+    );
+  }
 
   Wrap _buildMediaSheet() {
     return Wrap(
       children: [
         _buildAttachImageButton(),
         _buildAttachFileButton(),
-        _buildAttachLocationButton()
+        _buildAttachLocationButton(),
+        //_buildAttachVoiceButton()
       ],
     );
   }
@@ -259,111 +268,110 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  Container _buildInputRow() => Container(
-        height: _h * 0.08,
-        alignment: Alignment.bottomCenter,
-        color: Theme.of(context).bottomAppBarColor,
-        padding: const EdgeInsets.only(bottom: 10, top: 10),
-        child: Row(
-          children: [
-            ElevatedButton(
-              onPressed: () =>
-                  setState(() => _showMediaSheet = !_showMediaSheet),
-              child: Icon(_showMediaSheet ? Icons.close : Icons.add, size: 20),
-              style: ElevatedButton.styleFrom(
-                shape: CircleBorder(),
-                primary: PURPLE_COLOR,
-                minimumSize: Size(_w * 0.06, _w * 0.06),
-              ),
-            ),
-            SizedBox(
-              width: _w * 0.63,
-              child: TextField(
-                // minLines: null,
-                // maxLines: null,
-                // expands: true,
-                enabled: _msgType == "text",
-                controller: _enterMsgController,
-                decoration: InputDecoration(
-                  focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey)),
-                  border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey)),
-                  hintText: _msgType == "text"
-                      ? "Enter message"
-                      : _msgType == "location"
-                          ? _locationResult!['place']
-                          : _pFile!.name,
+  // Padding _buildAttachVoiceButton() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: Column(
+  //       children: [
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             FlutterSoundRecorder();
+  //           },
+  //           child: Icon(
+  //             Icons.keyboard_voice_outlined,
+  //             color: Colors.black,
+  //             size: 30,
+  //           ),
+  //           style: ElevatedButton.styleFrom(
+  //               primary: Colors.white, fixedSize: Size(40, 50)),
+  //         ),
+  //         Padding(
+  //           padding: const EdgeInsets.all(8.0),
+  //           child: Text("Voice"),
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Container _buildInputRow() {
+    return Container(
+      height: _h * 0.08,
+      alignment: Alignment.bottomCenter,
+      color: Theme.of(context).bottomAppBarColor,
+      padding: const EdgeInsets.only(bottom: 10, top: 10),
+      child: Row(
+        children: [
+          _buildAttachButton(),
+          _buildMessageTextField(),
+          _uploading
+              ? Container(
+                  child: CircularProgressIndicator(),
+                  height: _w * 0.056,
+                  width: _w * 0.056,
+                  margin: const EdgeInsets.all(10),
+                )
+              : IconButton(
+                  icon: Icon(Icons.close, color: Colors.black),
+                  onPressed: () {
+                    _enterMsgController.clear();
+                    _pFile = null;
+                    setState(() => _msgType = "text");
+                  },
                 ),
-              ),
-            ),
-            _uploading
-                ? Container(
-                    child: CircularProgressIndicator(),
-                    height: _w * 0.056,
-                    width: _w * 0.056,
-                    margin: const EdgeInsets.all(10),
-                  )
-                : IconButton(
-                    icon: Icon(Icons.close, color: Colors.black),
-                    onPressed: () {
-                      _enterMsgController.clear();
-                      _pFile = null;
-                      setState(() => _msgType = "text");
-                    },
-                  ),
-            !_uploading
-                ? IconButton(
-                    onPressed: _sendMessage,
-                    icon: Icon(Icons.send),
-                    color: PURPLE_COLOR,
-                  )
-                : Container()
-          ],
-        ),
-      );
-
-  Future<void> _sendMessage() async {
-    String msg = _enterMsgController.text.trim();
-    switch (_msgType) {
-      case "text":
-        if (_room.censoring) msg = _filter.censor(msg);
-        break;
-      case "file":
-        msg = _pFile!.name;
-        setState(() => _uploading = true);
-        UploadTask? task = FirebaseStorage.instance
-            .ref()
-            .child(_room.roomId)
-            .child(_pFile!.name)
-            .putFile(File(_pFile!.path!));
-        await task.then((TaskSnapshot snapshot) {});
-        setState(() => _uploading = false);
-        break;
-      case "image":
-        setState(() => _uploading = true);
-        msg = await ImageDatabaseService.uploadImage(
-            _pFile!.path!, _room.censoring);
-        setState(() => _uploading = false);
-        break;
-      case "location":
-        msg = jsonEncode(_locationResult);
-        break;
-    }
-    if (msg.isNotEmpty) {
-      bool sent = await ChatDatabaseService.sendMessage(
-          msg, _room.roomId, _user!.uid, _msgType);
-
-      if (sent) {
-        _enterMsgController.clear();
-        _pFile = null;
-        setState(() => _msgType = "text");
-      }
-    }
+          !_uploading
+              ? IconButton(
+                  onPressed: _sendMessage,
+                  icon: Icon(Icons.send),
+                  color: PURPLE_COLOR,
+                )
+              : Container()
+        ],
+      ),
+    );
   }
 
-  Widget _buildChatMessageTile(ChatMessage msg) =>
-      msg.userId == _user!.uid ? _buildMyMsgTile(msg) : _buildOtherMsgTile(msg);
+  SizedBox _buildMessageTextField() {
+    return SizedBox(
+      width: _w * 0.63,
+      child: TextField(
+        // minLines: null,
+        // maxLines: null,
+        // expands: true,
+        enabled: _msgType == "text",
+        controller: _enterMsgController,
+        decoration: InputDecoration(
+          focusedBorder:
+              OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+          border:
+              OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+          hintText: _msgType == "text"
+              ? "Enter message"
+              : _msgType == "location"
+                  ? _locationResult!['place']
+                  : _pFile!.name,
+        ),
+      ),
+    );
+  }
+
+  ElevatedButton _buildAttachButton() {
+    return ElevatedButton(
+      onPressed: () => setState(() => _showMediaSheet = !_showMediaSheet),
+      child: Icon(_showMediaSheet ? Icons.close : Icons.add, size: 20),
+      style: ElevatedButton.styleFrom(
+        shape: CircleBorder(),
+        primary: PURPLE_COLOR,
+        minimumSize: Size(_w * 0.06, _w * 0.06),
+      ),
+    );
+  }
+
+  Widget _buildChatMessageTile(ChatMessage msg) {
+    return msg.userId == _user!.uid
+        ? _buildMyMsgTile(msg)
+        : _buildOtherMsgTile(msg);
+  }
 
   Widget _buildMyMsgTile(ChatMessage msg) {
     Map<String, dynamic>? location;
@@ -385,22 +393,8 @@ class _ChatState extends State<Chat> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (msg.type == "file")
-              IconButton(
-                onPressed: () async => await launch(await FirebaseStorage
-                    .instance
-                    .ref()
-                    .child(_room.roomId)
-                    .child(msg.msg)
-                    .getDownloadURL()),
-                icon: Icon(Icons.download),
-              ),
-            if (msg.type == "image")
-              Image(
-                image: ImageDatabaseService.getImageByImageId(msg.msg),
-                height: _h * 0.3,
-                fit: BoxFit.contain,
-              ),
+            if (msg.type == "file") _buildFileDownloadButton(msg),
+            if (msg.type == "image") _buildImageMessage(msg),
             if (msg.type == "file" || msg.type == "text")
               Flexible(
                 child: Text(
@@ -412,44 +406,11 @@ class _ChatState extends State<Chat> {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    height: _h * 0.2,
-                    width: _w * 0.6,
-                    child: FlutterMap(
-                      options: MapOptions(
-                        onTap: (latlng) async => await MapLauncher.showMarker(
-                          title: location!['place'],
-                          mapType: MapType.google,
-                          coords: Coords(coords!.latitude, coords.longitude),
-                        ),
-                        allowPanning: false,
-                        center: coords,
-                      ),
-                      layers: [
-                        TileLayerOptions(
-                          urlTemplate:
-                              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                          subdomains: ['a', 'b', 'c'],
-                        ),
-                        MarkerLayerOptions(
-                          markers: [
-                            Marker(
-                              point: coords!,
-                              builder: (_) => Icon(
-                                Icons.location_on_rounded,
-                                color: PURPLE_COLOR,
-                                size: _w * 0.1,
-                              ),
-                            )
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
+                  _buildMapInMessage(location!, coords!),
                   Container(
                     width: _w * 0.6,
                     child: Text(
-                      location!['place'],
+                      location['place'],
                       style:
                           TextStyle(color: Colors.white, fontSize: _w * 0.045),
                     ),
@@ -462,6 +423,14 @@ class _ChatState extends State<Chat> {
     );
     _lastMsgBy = msg.userId;
     return res;
+  }
+
+  Image _buildImageMessage(ChatMessage msg) {
+    return Image(
+      image: ImageDatabaseService.getImageByImageId(msg.msg),
+      height: _h * 0.3,
+      fit: BoxFit.contain,
+    );
   }
 
   Widget _buildOtherMsgTile(ChatMessage msg) {
@@ -504,67 +473,17 @@ class _ChatState extends State<Chat> {
                             style: TextStyle(
                                 color: Colors.black, fontSize: _w * 0.045)),
                       ),
-                    if (msg.type == "image")
-                      Image(
-                        image: ImageDatabaseService.getImageByImageId(msg.msg),
-                        height: _h * 0.3,
-                        fit: BoxFit.contain,
-                      ),
-                    if (msg.type == "file")
-                      IconButton(
-                        onPressed: () async {
-                          await launch(await FirebaseStorage.instance
-                              .ref()
-                              .child(_room.roomId)
-                              .child(msg.msg)
-                              .getDownloadURL());
-                        },
-                        icon: Icon(Icons.download),
-                      ),
+                    if (msg.type == "image") _buildImageMessage(msg),
+                    if (msg.type == "file") _buildFileDownloadButton(msg),
                     if (msg.type == "location")
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            height: _h * 0.2,
-                            width: _w * 0.6,
-                            child: FlutterMap(
-                              options: MapOptions(
-                                onTap: (latlng) async =>
-                                    await MapLauncher.showMarker(
-                                  title: location!['place'],
-                                  mapType: MapType.google,
-                                  coords: Coords(
-                                      coords!.latitude, coords.longitude),
-                                ),
-                                allowPanning: false,
-                                center: coords,
-                              ),
-                              layers: [
-                                TileLayerOptions(
-                                  urlTemplate:
-                                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                                  subdomains: ['a', 'b', 'c'],
-                                ),
-                                MarkerLayerOptions(
-                                  markers: [
-                                    Marker(
-                                      point: coords!,
-                                      builder: (_) => Icon(
-                                        Icons.location_on_rounded,
-                                        color: PURPLE_COLOR,
-                                        size: _w * 0.1,
-                                      ),
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
+                          _buildMapInMessage(location!, coords!),
                           Container(
                             width: _w * 0.6,
                             child: Text(
-                              location!['place'],
+                              location['place'],
                               style: TextStyle(
                                   color: Colors.black, fontSize: _w * 0.045),
                             ),
@@ -583,6 +502,55 @@ class _ChatState extends State<Chat> {
     return res;
   }
 
+  IconButton _buildFileDownloadButton(ChatMessage msg) {
+    return IconButton(
+      onPressed: () async {
+        await launch(await FirebaseStorage.instance
+            .ref()
+            .child(_room.roomId)
+            .child(msg.msg)
+            .getDownloadURL());
+      },
+      icon: Icon(Icons.download),
+    );
+  }
+
+  Container _buildMapInMessage(Map<String, dynamic> location, LatLng coords) {
+    return Container(
+      height: _h * 0.2,
+      width: _w * 0.6,
+      child: FlutterMap(
+        options: MapOptions(
+          onTap: (latlng) async => await MapLauncher.showMarker(
+            title: location['place'],
+            mapType: MapType.google,
+            coords: Coords(coords.latitude, coords.longitude),
+          ),
+          allowPanning: false,
+          center: coords,
+        ),
+        layers: [
+          TileLayerOptions(
+            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            subdomains: ['a', 'b', 'c'],
+          ),
+          MarkerLayerOptions(
+            markers: [
+              Marker(
+                point: coords,
+                builder: (_) => Icon(
+                  Icons.location_on_rounded,
+                  color: PURPLE_COLOR,
+                  size: _w * 0.1,
+                ),
+              )
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _getUserIcon(ChatMessage msg) {
     return _lastMsgBy == msg.userId
         ? Container(width: 40)
@@ -597,6 +565,45 @@ class _ChatState extends State<Chat> {
                 : CircleAvatar(
                     backgroundImage: ImageDatabaseService.getImageByImageId(
                         _room.users[msg.userId]!.imgUrl!));
+  }
+
+  Future<void> _sendMessage() async {
+    String msg = _enterMsgController.text.trim();
+    switch (_msgType) {
+      case "text":
+        if (_room.censoring) msg = _filter.censor(msg);
+        break;
+      case "file":
+        msg = _pFile!.name;
+        setState(() => _uploading = true);
+        UploadTask? task = FirebaseStorage.instance
+            .ref()
+            .child(_room.roomId)
+            .child(_pFile!.name)
+            .putFile(File(_pFile!.path!));
+        await task.then((TaskSnapshot snapshot) {});
+        setState(() => _uploading = false);
+        break;
+      case "image":
+        setState(() => _uploading = true);
+        msg = await ImageDatabaseService.uploadImage(
+            _pFile!.path!, _room.censoring);
+        setState(() => _uploading = false);
+        break;
+      case "location":
+        msg = jsonEncode(_locationResult);
+        break;
+    }
+    if (msg.isNotEmpty) {
+      bool sent = await ChatDatabaseService.sendMessage(
+          msg, _room.roomId, _user!.uid, _msgType);
+
+      if (sent) {
+        _enterMsgController.clear();
+        _pFile = null;
+        setState(() => _msgType = "text");
+      }
+    }
   }
 
   Future<void> _pickFile() async {

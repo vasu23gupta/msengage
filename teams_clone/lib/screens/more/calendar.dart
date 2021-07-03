@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:teams_clone/models/CalendarEvent.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
+import 'package:teams_clone/screens/home.dart';
 import 'package:teams_clone/screens/more/create_event.dart';
 import 'package:teams_clone/screens/more/event_details.dart';
 import 'package:teams_clone/services/database.dart';
@@ -37,21 +38,22 @@ class _CalendarState extends State<Calendar> {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
     _room = widget.room;
-    _eventWidgets = <Widget>[
-      SizedBox(height: 10),
-      TableCalendar(
-        firstDay: DateTime.now(),
-        lastDay: DateTime.now().add(Duration(days: 150)),
-        focusedDay: DateTime.now(),
-        availableGestures: AvailableGestures.all,
-        headerVisible: false,
-        onDaySelected: (a, b) => _itemScrollController.scrollTo(
-          index: _datesAndHeadingIndices[_dateToNumber(b)]!,
-          duration: Duration(milliseconds: 500),
-        ),
-      ),
-    ];
+    _eventWidgets = <Widget>[SizedBox(height: 10), _buildTableCalendar()];
     getEvents();
+  }
+
+  TableCalendar<dynamic> _buildTableCalendar() {
+    return TableCalendar(
+      firstDay: DateTime.now(),
+      lastDay: DateTime.now().add(Duration(days: 150)),
+      focusedDay: DateTime.now(),
+      availableGestures: AvailableGestures.all,
+      headerVisible: false,
+      onDaySelected: (a, b) => _itemScrollController.scrollTo(
+        index: _datesAndHeadingIndices[_dateToNumber(b)]!,
+        duration: Duration(milliseconds: 500),
+      ),
+    );
   }
 
   Future<void> getEvents() async {
@@ -82,22 +84,23 @@ class _CalendarState extends State<Calendar> {
     }
   }
 
-  Padding _buildDateHeading(DateTime dateTime) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Text(
-              '${dateTime.day} ${MONTHS_3CHAR[dateTime.month - 1]}  ',
-              style:
-                  TextStyle(fontWeight: FontWeight.bold, fontSize: _w * 0.05),
-            ),
-            Text(
-              '${DAYS_FULL[dateTime.weekday - 1]}',
-              style: TextStyle(fontSize: _w * 0.04),
-            )
-          ],
-        ),
-      );
+  Padding _buildDateHeading(DateTime dateTime) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Text(
+            '${dateTime.day} ${MONTHS_3CHAR[dateTime.month - 1]}  ',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: _w * 0.05),
+          ),
+          Text(
+            '${DAYS_FULL[dateTime.weekday - 1]}',
+            style: TextStyle(fontSize: _w * 0.04),
+          )
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,23 +109,36 @@ class _CalendarState extends State<Calendar> {
     return _loading
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
-            appBar: AppBar(
-              iconTheme: APPBAR_ICON_THEME,
-              title: Text(MONTHS_FULL[DateTime.now().month - 1],
-                  style: APPBAR_TEXT_STYLE),
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => CreateEvent(room: _room))),
-              child: Icon(Icons.add),
-            ),
-            body: ScrollablePositionedList.builder(
-              itemCount: _eventWidgets.length,
-              itemBuilder: (context, index) => _eventWidgets[index],
-              itemScrollController: _itemScrollController,
-              itemPositionsListener: _itemPositionsListener,
-            ),
+            appBar: _buildAppBar(context),
+            floatingActionButton: _buildAddFAB(),
+            body: _buildListView(),
           );
+  }
+
+  ScrollablePositionedList _buildListView() {
+    return ScrollablePositionedList.builder(
+      itemCount: _eventWidgets.length,
+      itemBuilder: (context, index) => _eventWidgets[index],
+      itemScrollController: _itemScrollController,
+      itemPositionsListener: _itemPositionsListener,
+    );
+  }
+
+  FloatingActionButton _buildAddFAB() {
+    return FloatingActionButton(
+      onPressed: () => Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => CreateEvent(room: _room))),
+      child: Icon(Icons.add),
+    );
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      iconTheme: APPBAR_ICON_THEME,
+      title:
+          Text(MONTHS_FULL[DateTime.now().month - 1], style: APPBAR_TEXT_STYLE),
+      bottom: buildSearchBar(context),
+    );
   }
 
   int _dateToNumber(DateTime dateTime) {

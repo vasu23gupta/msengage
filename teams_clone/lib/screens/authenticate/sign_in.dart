@@ -26,73 +26,92 @@ class _SignInState extends State<SignIn> {
     return _loading
         ? Center(child: CircularProgressIndicator())
         : Scaffold(
-            appBar: AppBar(
-              elevation: 0.0,
-              title: Text(
-                _signingIn ? 'Sign in' : 'Register',
-                style: APPBAR_TEXT_STYLE,
-              ),
-              actions: <Widget>[
-                TextButton.icon(
-                  icon: Icon(Icons.person),
-                  label: Text(_signingIn ? 'Register' : 'Sign in'),
-                  onPressed: () => setState(() => (_signingIn = !_signingIn)),
-                  style: TextButton.styleFrom(primary: PURPLE_COLOR),
-                )
-              ],
-            ),
+            appBar: _buildAppBar(),
             body: Form(
               key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  SizedBox(height: 20.0),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _w * 0.05),
-                    child: TextFormField(
-                      decoration:
-                          textInputDecoration.copyWith(hintText: 'Enter email'),
-                      validator: (val) =>
-                          val!.isEmpty ? 'Enter an email' : null,
-                      controller: _email,
-                    ),
-                  ),
-                  SizedBox(height: 20.0),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _w * 0.05),
-                    child: TextFormField(
-                      decoration:
-                          textInputDecoration.copyWith(hintText: 'Password'),
-                      obscureText: true,
-                      validator: (val) => val!.length < 6
-                          ? 'Enter a password 6+ characters long'
-                          : null,
-                      controller: _password,
-                    ),
-                  ),
-                  SizedBox(height: 20.0),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: PURPLE_COLOR,
-                      minimumSize: Size(_w * 0.9, _h * 0.06),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5))),
-                    ),
-                    child: Text(
-                      _signingIn ? 'Sign in' : 'Register',
-                      style:
-                          TextStyle(color: Colors.white, fontSize: _w * 0.04),
-                    ),
-                    onPressed: () => _signingIn ? _signIn() : _register(),
-                  ),
-                  SizedBox(height: 12.0),
-                  Text(
-                    _error,
-                    style: TextStyle(color: Colors.red, fontSize: 14.0),
-                  ),
-                ],
-              ),
+              child: _buildColumn(),
             ),
           );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      elevation: 0.0,
+      title: Text(
+        _signingIn ? 'Sign in' : 'Register',
+        style: APPBAR_TEXT_STYLE,
+      ),
+      actions: <Widget>[
+        TextButton.icon(
+          icon: Icon(Icons.person),
+          label: Text(_signingIn ? 'Register' : 'Sign in'),
+          onPressed: () => setState(() => (_signingIn = !_signingIn)),
+          style: TextButton.styleFrom(primary: PURPLE_COLOR),
+        )
+      ],
+    );
+  }
+
+  Column _buildColumn() {
+    return Column(
+      children: <Widget>[
+        SizedBox(height: 20.0),
+        _buildEmailTextField(),
+        SizedBox(height: 20.0),
+        _buildPasswordTextField(),
+        SizedBox(height: 20.0),
+        _buildSignInRegisterButton(),
+        SizedBox(height: 12.0),
+        _buildErrorText(),
+      ],
+    );
+  }
+
+  Padding _buildEmailTextField() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: _w * 0.05),
+      child: TextFormField(
+        decoration: textInputDecoration.copyWith(hintText: 'Enter email'),
+        validator: (val) => val!.isEmpty ? 'Enter an email' : null,
+        controller: _email,
+      ),
+    );
+  }
+
+  Padding _buildPasswordTextField() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: _w * 0.05),
+      child: TextFormField(
+        decoration: textInputDecoration.copyWith(hintText: 'Password'),
+        obscureText: true,
+        validator: (val) =>
+            val!.length < 6 ? 'Enter a password 6+ characters long' : null,
+        controller: _password,
+      ),
+    );
+  }
+
+  ElevatedButton _buildSignInRegisterButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        primary: PURPLE_COLOR,
+        minimumSize: Size(_w * 0.9, _h * 0.06),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(5))),
+      ),
+      child: Text(
+        _signingIn ? 'Sign in' : 'Register',
+        style: TextStyle(color: Colors.white, fontSize: _w * 0.04),
+      ),
+      onPressed: () => _signingIn ? _signIn() : _register(),
+    );
+  }
+
+  Text _buildErrorText() {
+    return Text(
+      _error,
+      style: TextStyle(color: Colors.red, fontSize: 14.0),
+    );
   }
 
   Future<void> _signIn() async {

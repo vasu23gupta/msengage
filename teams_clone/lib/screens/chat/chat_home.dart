@@ -6,7 +6,6 @@ import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat.dart';
 import 'package:teams_clone/screens/chat/name_image.dart';
-import 'package:teams_clone/screens/search.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/shared/constants.dart';
@@ -21,6 +20,11 @@ class ChatHome extends StatefulWidget {
 List<ChatRoom> rooms = [];
 
 class _ChatHomeState extends State<ChatHome> {
+  User? _user;
+  late double _w;
+  late double _h;
+  bool _loading = true;
+
   @override
   void initState() {
     super.initState();
@@ -34,35 +38,11 @@ class _ChatHomeState extends State<ChatHome> {
     setState(() => _loading = false);
   }
 
-  User? _user;
-  late double _w;
-  late double _h;
-  bool _loading = true;
-
   @override
   Widget build(BuildContext context) {
     _w = MediaQuery.of(context).size.width;
     _h = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        leading: null,
-        automaticallyImplyLeading: false,
-        titleSpacing: 6,
-        title: GestureDetector(
-          onTap: () => Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => Search())),
-          child: TextField(
-            enabled: false,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              prefixIcon: Icon(Icons.search),
-              hintText: "Search",
-              fillColor: Colors.grey[200],
-              filled: true,
-            ),
-          ),
-        ),
-      ),
       body: _loading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -73,32 +53,9 @@ class _ChatHomeState extends State<ChatHome> {
                     _buildChatRoomTile(rooms[index]),
               ),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => ChatNameImage())),
-        child: Icon(Icons.create),
-      ),
+      floatingActionButton: _buildCreateFAB(),
     );
   }
-
-  // Widget _buildScaffold() {
-  //   return FutureBuilder(
-  //     future: ChatDatabaseService.getChatRooms(_user!.uid),
-  //     builder: (context, snapshot) {
-  //       if (!snapshot.hasData)
-  //         return Center(child: CircularProgressIndicator());
-
-  //       rooms = snapshot.data as List<ChatRoom>;
-  //       return RefreshIndicator(
-  //         onRefresh: () async => setState(() {}),
-  //         child: ListView.builder(
-  //           itemCount: rooms.length,
-  //           itemBuilder: (context, index) => _buildChatRoomTile(rooms[index]),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 
   Container _buildChatRoomTile(ChatRoom room) {
     ChatMessage? msg = room.messages.isEmpty ? null : room.messages[0];
@@ -147,6 +104,14 @@ class _ChatHomeState extends State<ChatHome> {
         onTap: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => Chat(room))),
       ),
+    );
+  }
+
+  FloatingActionButton _buildCreateFAB() {
+    return FloatingActionButton(
+      onPressed: () => Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => ChatNameImage())),
+      child: Icon(Icons.create),
     );
   }
 }

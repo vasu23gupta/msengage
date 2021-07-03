@@ -20,103 +20,77 @@ class ChatDetails extends StatefulWidget {
 class _ChatDetailsState extends State<ChatDetails> {
   late ChatRoom _room;
   User? _user;
+  List<Widget> _participantsTiles = <Widget>[];
+
   @override
   void initState() {
     super.initState();
     _user = Provider.of<User?>(context, listen: false);
     _room = widget.room;
+    _buildParticipantsList();
+  }
+
+  void _buildParticipantsList() {
+    _participantsTiles = _room.users.values
+        .map((e) => ListTile(
+              leading: e.imgUrl == null || e.imgUrl!.isEmpty
+                  ? CircleAvatar(
+                      child: Text(e.name.substring(0, 2).toUpperCase()))
+                  : CircleAvatar(
+                      backgroundImage:
+                          ImageDatabaseService.getImageByImageId(e.imgUrl!)),
+              title: Text(e.name),
+              onTap: () => Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (_) => Profile(appUser: e))),
+            ))
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: APPBAR_ICON_THEME,
-        title: Text("Chat Details", style: APPBAR_TEXT_STYLE),
-        actions: [
-          IconButton(
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => AddUsers(room: _room))),
-            icon: Icon(Icons.person_add_alt_outlined),
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: ListView(
         children: [
           SizedBox(height: 10),
-          Center(
-            child: Stack(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 70,
-                  backgroundImage: _room.imgUrl == null || _room.imgUrl!.isEmpty
-                      ? ExactAssetImage(DEFAULT_GROUP_IMG)
-                      : ImageDatabaseService.getImageByImageId(_room.imgUrl!)
-                          as ImageProvider,
-                ),
-                _editImageButton()
-              ],
-            ),
+          _buildRoomIcon(),
+          _buildChangeNameTile(),
+          _buildProfanityFilterTile(),
+          _buildLeaveTile(),
+          _buildNumberOfParticipantsTile(),
+          ..._participantsTiles
+        ],
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      iconTheme: APPBAR_ICON_THEME,
+      title: Text("Chat Details", style: APPBAR_TEXT_STYLE),
+      actions: [
+        IconButton(
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => AddUsers(room: _room))),
+          icon: Icon(Icons.person_add_alt_outlined),
+        ),
+      ],
+    );
+  }
+
+  Center _buildRoomIcon() {
+    return Center(
+      child: Stack(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.white,
+            radius: 70,
+            backgroundImage: _room.imgUrl == null || _room.imgUrl!.isEmpty
+                ? ExactAssetImage(DEFAULT_GROUP_IMG)
+                : ImageDatabaseService.getImageByImageId(_room.imgUrl!)
+                    as ImageProvider,
           ),
-          ListTile(
-            leading: Icon(Icons.edit),
-            title: Text(_room.name),
-            onTap: () => showDialog(
-                context: context, builder: (_) => _buildChangeNameDialog()),
-          ),
-          ListTile(
-            leading: Icon(Icons.report_gmailerrorred_rounded),
-            title: Text("Profanity filtering"),
-            trailing: Switch(
-              activeColor: PURPLE_COLOR,
-              onChanged: (val) async {
-                bool prev = _room.censoring;
-                setState(() => _room.censoring = val);
-                bool changed = await ChatDatabaseService.changeRoomCensorship(
-                    _room.roomId, _user!.uid, val);
-                if (!changed) setState(() => _room.censoring = prev);
-              },
-              value: _room.censoring,
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.person_remove_alt_1_outlined),
-            title: Text("Leave chat"),
-            onTap: () async {
-              bool left = await ChatDatabaseService.leaveChatRoom(
-                  _room.roomId, _user!.uid);
-              if (left) {
-                int _count = 0;
-                Navigator.popUntil(context, (route) => _count++ == 2);
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => Home()));
-              }
-            },
-          ),
-          ListTile(
-            title: Text(
-              "${_room.users.length} participants",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          ListView(
-            shrinkWrap: true,
-            children: _room.users.values
-                .map((e) => ListTile(
-                      leading: e.imgUrl == null || e.imgUrl!.isEmpty
-                          ? CircleAvatar(
-                              child: Text(e.name.substring(0, 2).toUpperCase()))
-                          : CircleAvatar(
-                              backgroundImage:
-                                  ImageDatabaseService.getImageByImageId(
-                                      e.imgUrl!)),
-                      title: Text(e.name),
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => Profile(appUser: e))),
-                    ))
-                .toList(),
-          )
+          _editImageButton()
         ],
       ),
     );
@@ -149,6 +123,59 @@ class _ChatDetailsState extends State<ChatDetails> {
         itemBuilder: (context) => ['Edit', 'Remove']
             .map((choice) => PopupMenuItem(child: Text(choice), value: choice))
             .toList(),
+      ),
+    );
+  }
+
+  ListTile _buildChangeNameTile() {
+    return ListTile(
+      leading: Icon(Icons.edit),
+      title: Text(_room.name),
+      onTap: () => showDialog(
+          context: context, builder: (_) => _buildChangeNameDialog()),
+    );
+  }
+
+  ListTile _buildProfanityFilterTile() {
+    return ListTile(
+      leading: Icon(Icons.report_gmailerrorred_rounded),
+      title: Text("Profanity filtering"),
+      trailing: Switch(
+        activeColor: PURPLE_COLOR,
+        onChanged: (val) async {
+          bool prev = _room.censoring;
+          setState(() => _room.censoring = val);
+          bool changed = await ChatDatabaseService.changeRoomCensorship(
+              _room.roomId, _user!.uid, val);
+          if (!changed) setState(() => _room.censoring = prev);
+        },
+        value: _room.censoring,
+      ),
+    );
+  }
+
+  ListTile _buildLeaveTile() {
+    return ListTile(
+      leading: Icon(Icons.person_remove_alt_1_outlined),
+      title: Text("Leave chat"),
+      onTap: () async {
+        bool left =
+            await ChatDatabaseService.leaveChatRoom(_room.roomId, _user!.uid);
+        if (left) {
+          int _count = 0;
+          Navigator.popUntil(context, (route) => _count++ == 2);
+          Navigator.of(context)
+              .pushReplacement(MaterialPageRoute(builder: (context) => Home()));
+        }
+      },
+    );
+  }
+
+  ListTile _buildNumberOfParticipantsTile() {
+    return ListTile(
+      title: Text(
+        "${_room.users.length} participants",
+        style: TextStyle(fontWeight: FontWeight.bold),
       ),
     );
   }
