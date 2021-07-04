@@ -8,7 +8,12 @@ const EventModel = mongoose.model('Events');
 const ChatRoomModel = mongoose.model('ChatRoom');
 const ChatMessage = require('../models/ChatMessage.js');
 const upload = require('../shared/multer_configuration');
-const cp = require('child_process');
+//const cp = require('child_process');
+const https = require('https');
+const querystring = require('querystring');
+
+const dotenv = require('dotenv');
+dotenv.config();
 
 /**
  * add firebase user to database
@@ -156,6 +161,44 @@ router.get('/search/:query', async (req, res) => {
     catch (err) {
         console.log(err);
         return res.status(err.status || 500).json({ error: err })
+    }
+});
+
+/**
+ * get address from latlng
+ * request:
+ *   parameters: 
+ *     lat: latitude
+ *     lng: longitude
+ * response:
+ *   json: {
+ *     address: {String} address of coordindates
+ *   }
+ */
+router.get('/address/:lat/:lng', async (req, res) => {
+    const lat = req.params.lat;
+    const lng = req.params.lng;
+    try {
+        let output = '';
+        const parameters = {
+            key: process.env.LOCATIONIQ_API_KEY,
+            lat: lat,
+            lon: lng,
+            format: 'json'
+        }
+        const get_request_args = querystring.stringify(parameters);
+        https.get("https://eu1.locationiq.com/v1/reverse.php/?" + get_request_args, (ress) => {
+            ress.setEncoding('utf8');
+            ress.on('data', (chunk) => {
+                output += chunk;
+            });
+            ress.on('end', () => {
+                let obj = (output);
+                res.json({ "address": JSON.parse(obj).display_name });
+            });
+        });
+    } catch (err) {
+        res.json({ message: err });
     }
 });
 

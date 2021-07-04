@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 const fs = require('fs');
+
+const dotenv = require('dotenv');
+dotenv.config();
+
 const deepai = require('deepai');
-deepai.setApiKey('506d04ca-79e2-4daa-97cd-7eb4c8722a1a');
+const DEEPAI_API_KEY = process.env.DEEPAI_API_KEY;
+deepai.setApiKey(DEEPAI_API_KEY);
 
 const ImageSchema = mongoose.Schema({
     img:

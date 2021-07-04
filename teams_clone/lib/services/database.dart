@@ -84,6 +84,21 @@ class UserDBService {
 
     return result;
   }
+
+  /// Returns a json containing the coordinates
+  /// [coords] and the complete address at [coords].
+  static Future<Map<String, dynamic>> getAddressFromCoordinates(
+      LatLng coords) async {
+    String _revGeoUrl =
+        "${_usersUrl}address/${coords.latitude}/${coords.longitude}";
+    http.Response res = await http.get(Uri.parse(_revGeoUrl));
+    Map<String, dynamic> result = {
+      'place': jsonDecode(res.body)['address'],
+      'lat': coords.latitude,
+      'lon': coords.longitude
+    };
+    return result;
+  }
 }
 
 /// For all chat related database functions.
@@ -296,24 +311,4 @@ class ImageDatabaseService {
 
     return imgId;
   }
-}
-
-/// Returns a json containing various information about the coordinates
-/// [coords] including country, state, city etc.
-Future<Map<String, dynamic>> reverseGeocode(LatLng coords) async {
-  String _revGeoApiKey = "pk.2f59bc5282019634c04ee4b55f7e9798";
-  String _revGeoUrl = "https://eu1.locationiq.com/v1/reverse.php";
-  Map<String, dynamic> queryParams = {
-    'key': _revGeoApiKey,
-    'lat': coords.latitude,
-    'lon': coords.longitude,
-    'format': 'json'
-  };
-  Response res = await _dio.get(_revGeoUrl, queryParameters: queryParams);
-  Map<String, dynamic> result = {
-    'place': res.data['display_name'],
-    'lat': coords.latitude,
-    'lon': coords.longitude
-  };
-  return result;
 }

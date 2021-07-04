@@ -34,7 +34,9 @@ app.use('/images', imagesRoute);
 
 //db
 async function connectDB() {
-  await mongoose.connect("mongodb+srv://vasugupta:vasugupta@cluster0.uhnx9.mongodb.net/Cluster0?retryWrites=true&w=majority", { useNewUrlParser: true, useUnifiedTopology: true });
+  await mongoose.connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.uhnx9.mongodb.net/Cluster0?retryWrites=true&w=majority`,
+    { useNewUrlParser: true, useUnifiedTopology: true });
   console.log("db connected");
 }
 connectDB();
