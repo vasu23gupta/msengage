@@ -10,10 +10,10 @@ import 'package:teams_clone/models/ChatMessage.dart';
 import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat_details.dart';
 import 'package:teams_clone/screens/chat/pick_location.dart';
-import 'package:teams_clone/screens/meet/meet.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
+import 'package:teams_clone/services/jitsi_meet.dart';
 import 'package:teams_clone/shared/constants.dart';
 import 'package:profanity_filter/profanity_filter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -96,8 +96,8 @@ class _ChatState extends State<Chat> {
       ),
       actions: [
         IconButton(
-            onPressed: () =>
-                joinMeeting(_room.roomId, _user!, name: _room.name),
+            onPressed: () => MeetingService.joinMeeting(_room.roomId, _user!,
+                name: _room.name),
             icon: Icon(Icons.video_call_outlined)),
         PopupMenuButton(
           onSelected: (choice) async {
@@ -572,7 +572,6 @@ class _ChatState extends State<Chat> {
     switch (_msgType) {
       case "text":
         if (_room.censoring) msg = _filter.censor(msg);
-        msg = emailToJitsiRoomId(msg);
         break;
       case "file":
         msg = _pFile!.name;

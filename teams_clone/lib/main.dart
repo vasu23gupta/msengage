@@ -19,11 +19,10 @@ class MyApp extends StatelessWidget {
       value: AuthService().user,
       initialData: null,
       child: MaterialApp(
-        title: 'LocalPedia',
+        title: 'Teams Clone',
         debugShowCheckedModeBanner: false,
         themeMode: ThemeMode.system,
-        theme: themeData,
-        //theme: ThemeData.dark(),
+        theme: lightThemeData,
         home: Wrapper(),
       ),
     );

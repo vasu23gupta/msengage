@@ -66,7 +66,7 @@ class _ChatHomeState extends State<ChatHome> {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          radius: _w * 0.07,
+          //radius: _w * 0.07,
           backgroundColor: Colors.white,
           backgroundImage: room.imgUrl == null || room.imgUrl!.isEmpty
               ? ExactAssetImage(DEFAULT_GROUP_IMG)

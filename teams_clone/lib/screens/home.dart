@@ -9,6 +9,7 @@ import 'package:teams_clone/screens/profile.dart';
 import 'package:teams_clone/screens/search.dart';
 import 'package:teams_clone/services/auth.dart';
 import 'package:teams_clone/services/database.dart';
+import 'package:teams_clone/services/jitsi_meet.dart';
 import 'package:teams_clone/shared/constants.dart';
 
 class Home extends StatefulWidget {
@@ -74,8 +75,8 @@ class _HomeState extends State<Home> {
       //elevation: 0,
       actions: [
         IconButton(
-            onPressed: () =>
-                joinMeeting(emailToJitsiRoomId(_appUser.email), _user!),
+            onPressed: () => MeetingService.joinMeeting(
+                MeetingService.emailToJitsiRoomId(_appUser.email), _user!),
             icon: Icon(Icons.video_call_rounded))
       ],
       bottom: buildSearchBar(context),
@@ -111,7 +112,10 @@ class _HomeState extends State<Home> {
   Stack _buildBody() {
     return Stack(
       children: [
-        //Offstage(offstage: _currentIndex == 0, child: Activity(),),
+        Offstage(
+          offstage: _currentIndex != 0,
+          child: _buildActivity(),
+        ),
         Offstage(
           offstage: _currentIndex != 1,
           child: ChatHome(),
@@ -121,6 +125,15 @@ class _HomeState extends State<Home> {
           child: Meeting(),
         ),
       ],
+    );
+  }
+
+  Center _buildActivity() {
+    return Center(
+      child: Text(
+        "Coming soon!",
+        style: TextStyle(fontSize: _w * 0.1),
+      ),
     );
   }
 

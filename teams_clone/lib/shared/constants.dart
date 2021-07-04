@@ -12,7 +12,7 @@ const PURPLE_COLOR = Color(0xff505AC9);
 const APPBAR_ICON_THEME = IconThemeData(color: Colors.black);
 const APPBAR_TEXT_STYLE = TextStyle(color: Colors.black, fontSize: 17);
 
-ThemeData themeData = ThemeData(
+ThemeData lightThemeData = ThemeData(
   appBarTheme: AppBarTheme(
       actionsIconTheme: APPBAR_ICON_THEME,
       backgroundColor: Colors.white,
