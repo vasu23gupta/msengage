@@ -13,7 +13,7 @@ class Meeting extends StatefulWidget {
 }
 
 class _MeetingState extends State<Meeting> {
-  final roomText = TextEditingController();
+  TextEditingController _roomText = TextEditingController();
   late User? _user;
 
   @override
@@ -78,21 +78,23 @@ class _MeetingState extends State<Meeting> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              controller: roomText,
+              controller: _roomText,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: "Enter organiser's username",
+                labelText: "Enter organiser's Email",
               ),
             ),
           ),
           ElevatedButton(
-            onPressed: () => joinMeeting(roomText.text, _user!),
+            onPressed: () =>
+                joinMeeting(emailToJitsiRoomId(_roomText.text), _user!),
             child: Text("Join Meeting"),
             style: ElevatedButton.styleFrom(primary: PURPLE_COLOR),
           ),
           Text("OR"),
           ElevatedButton(
-            onPressed: () => joinMeeting(_user!.email!.split('@')[0], _user!),
+            onPressed: () =>
+                joinMeeting(emailToJitsiRoomId(_user!.email!), _user!),
             child: Text("Create Meeting"),
             style: ElevatedButton.styleFrom(primary: PURPLE_COLOR),
           ),
@@ -111,6 +113,10 @@ class _MeetingState extends State<Meeting> {
       print("_onConferenceTerminated broadcasted with message: $message");
 
   _onError(error) => print("_onError broadcasted: $error");
+}
+
+String emailToJitsiRoomId(String email) {
+  return email.replaceAll(RegExp("[^a-zA-Z0-9-_]"), "_");
 }
 
 joinMeeting(String roomId, User _user, {String? name}) async {

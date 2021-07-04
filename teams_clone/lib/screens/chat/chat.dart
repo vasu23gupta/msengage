@@ -572,6 +572,7 @@ class _ChatState extends State<Chat> {
     switch (_msgType) {
       case "text":
         if (_room.censoring) msg = _filter.censor(msg);
+        msg = emailToJitsiRoomId(msg);
         break;
       case "file":
         msg = _pFile!.name;

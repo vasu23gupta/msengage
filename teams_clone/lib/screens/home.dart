@@ -74,7 +74,8 @@ class _HomeState extends State<Home> {
       //elevation: 0,
       actions: [
         IconButton(
-            onPressed: () => joinMeeting(_appUser.name, _user!),
+            onPressed: () =>
+                joinMeeting(emailToJitsiRoomId(_appUser.email), _user!),
             icon: Icon(Icons.video_call_rounded))
       ],
       bottom: buildSearchBar(context),
