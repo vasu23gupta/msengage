@@ -1,2 +1,3 @@
 user icon not updating.
 team icon update needs refresh.
+long text hides in textfield in chat.

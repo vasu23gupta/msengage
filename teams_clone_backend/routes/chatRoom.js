@@ -32,8 +32,26 @@ router.post('/room/message/:roomId', async (req, res) => {
     const type = req.body.type;
     const currentLoggedUser = req.get('authorisation');
     const post = await ChatMessageModel.createPostInChatRoom(roomId, messageText, currentLoggedUser, type);
+    //console.log(roomId);
     global.io.sockets.in(roomId).emit('new message', { message: post });
     return res.status(200).json({ success: true });
+  } catch (error) {
+    console.log(error);
+    return res.status(error.status || 500).json({ success: false, error: error })
+  }
+});
+
+router.patch('/room/join/:roomId', async (req, res) => {
+  try {
+    const roomId = req.params.roomId;
+    const room = await ChatRoomModel.findByIdAndUpdate(
+      roomId,
+      { $push: { userIds: req.get('authorisation') } }
+    );
+    if (room)
+      return res.status(200).json({ success: true });
+    else
+      return res.status(404).json({ success: false });
   } catch (error) {
     console.log(error);
     return res.status(error.status || 500).json({ success: false, error: error })
@@ -246,8 +264,7 @@ router.get('/room/:roomId', async (req, res) => {
 });
 
 /**
- * creates new chat room or returns an existing one if a room with same users
- * and name exists.
+ * creates new chat room.
  * request:
  *   body: {
  *       users: {[String]} array of users ids to be added,
@@ -265,7 +282,7 @@ router.get('/room/:roomId', async (req, res) => {
  */
 router.post('/initiate', upload.single('image'), async (req, res) => {
   try {
-    var { userIds, name, chatInitiator } = req.body;
+    var { userIds, name, chatInitiator, initiationMessageFlag } = req.body;
     var allUserIds;
     // = [...userIds, chatInitiator];
     if (Array.isArray(userIds)) allUserIds = [...userIds, chatInitiator];
@@ -273,12 +290,29 @@ router.post('/initiate', upload.single('image'), async (req, res) => {
     var f = req.file;
     if (!name) name = "New chat";
     const chatRoom = await ChatRoomModel.initiateChat(allUserIds, chatInitiator, name, f);
-    await ChatMessageModel.createPostInChatRoom(
-      chatRoom.chatRoomId,
-      "Created the group",
-      chatInitiator,
-      "text"
-    );
+    var initiationMessage;
+    if (initiationMessageFlag == "chatroom") {
+      await ChatMessageModel.createPostInChatRoom(
+        chatRoom.chatRoomId,
+        "Created the group",
+        chatInitiator,
+        "text"
+      );
+    }
+    else if(initiationMessageFlag == "meeting"){
+      await ChatMessageModel.createPostInChatRoom(
+        chatRoom.chatRoomId,
+        "Started a meeting. Share the following meeting id to join the meeting.",
+        chatInitiator,
+        "text"
+      );
+      await ChatMessageModel.createPostInChatRoom(
+        chatRoom.chatRoomId,
+        chatRoom.chatRoomId,
+        chatInitiator,
+        "text"
+      );
+    }
     return res.status(200).json({ success: true, chatRoom });
   } catch (error) {
     console.log(error);
@@ -325,23 +359,6 @@ router.get('/', async (req, res) => {
 //       message: "Operation performed successfully",
 //       deletedRoomsCount: room.deletedCount,
 //       deletedMessagesCount: messages.deletedCount,
-//     });
-//   } catch (error) {
-//     return res.status(error.status || 500).json({ success: false, error: error })
-//   }
-// });
-
-// router.patch('/room/join/:roomId', async (req, res) => {
-//   try {
-//     const roomId = req.params.roomId;
-//     const room = await ChatRoomModel.updateOne({ _id: roomId }, {
-//       $push: {
-//         userIds: req.get('authorisation')
-//       }
-//     });
-//     return res.status(200).json({
-//       success: true,
-//       message: "Operation performed successfully"
 //     });
 //   } catch (error) {
 //     return res.status(error.status || 500).json({ success: false, error: error })

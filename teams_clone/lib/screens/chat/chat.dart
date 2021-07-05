@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart' hide Coords;
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/ChatMessage.dart';
@@ -11,6 +12,7 @@ import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat_details.dart';
 import 'package:teams_clone/screens/chat/pick_location.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
+import 'package:teams_clone/screens/profile.dart';
 import 'package:teams_clone/services/chat.dart';
 import 'package:teams_clone/services/database.dart';
 import 'package:teams_clone/services/jitsi_meet.dart';
@@ -137,15 +139,14 @@ class _ChatState extends State<Chat> {
             return Container(
               height: _h * 0.8,
               child: ListView(
-                reverse: true,
-                controller: _scrollController,
-                shrinkWrap: true,
-                children: _room.messages
-                    .map((e) => _buildChatMessageTile(e))
-                    .toList()
-                    .reversed
-                    .toList(),
-              ),
+                  reverse: true,
+                  controller: _scrollController,
+                  shrinkWrap: true,
+                  children: [
+                    ..._room.messages.reversed
+                        .map((e) => _buildChatMessageTile(e)),
+                    SizedBox(height: 60),
+                  ]),
             );
           },
         ),
@@ -390,34 +391,37 @@ class _ChatState extends State<Chat> {
             borderRadius: BorderRadius.all(Radius.circular(5))),
         margin: const EdgeInsets.fromLTRB(2, 2, 8, 2),
         padding: const EdgeInsets.all(6.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (msg.type == "file") _buildFileDownloadButton(msg),
-            if (msg.type == "image") _buildImageMessage(msg),
-            if (msg.type == "file" || msg.type == "text")
-              Flexible(
-                child: Text(
-                  msg.msg,
-                  style: TextStyle(color: Colors.white, fontSize: _w * 0.045),
-                ),
-              ),
-            if (msg.type == "location")
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildMapInMessage(location!, coords!),
-                  Container(
-                    width: _w * 0.6,
-                    child: Text(
-                      location['place'],
-                      style:
-                          TextStyle(color: Colors.white, fontSize: _w * 0.045),
-                    ),
+        child: GestureDetector(
+          onLongPress: () => _showMessageLongPressSheet(msg),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (msg.type == "file") _buildFileDownloadButton(msg),
+              if (msg.type == "image") _buildImageMessage(msg),
+              if (msg.type == "file" || msg.type == "text")
+                Flexible(
+                  child: Text(
+                    msg.msg,
+                    style: TextStyle(color: Colors.white, fontSize: _w * 0.045),
                   ),
-                ],
-              ),
-          ],
+                ),
+              if (msg.type == "location")
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildMapInMessage(location!, coords!),
+                    Container(
+                      width: _w * 0.6,
+                      child: Text(
+                        location['place'],
+                        style: TextStyle(
+                            color: Colors.white, fontSize: _w * 0.045),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -464,33 +468,36 @@ class _ChatState extends State<Chat> {
                     : _room.users[msg.userId] == null
                         ? Text("User")
                         : Text(_room.users[msg.userId]!.name),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (msg.type == "file" || msg.type == "text")
-                      Flexible(
-                        child: Text(msg.msg,
-                            style: TextStyle(
-                                color: Colors.black, fontSize: _w * 0.045)),
-                      ),
-                    if (msg.type == "image") _buildImageMessage(msg),
-                    if (msg.type == "file") _buildFileDownloadButton(msg),
-                    if (msg.type == "location")
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildMapInMessage(location!, coords!),
-                          Container(
-                            width: _w * 0.6,
-                            child: Text(
-                              location['place'],
+                GestureDetector(
+                  onLongPress: () => _showMessageLongPressSheet(msg),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (msg.type == "file" || msg.type == "text")
+                        Flexible(
+                          child: Text(msg.msg,
                               style: TextStyle(
-                                  color: Colors.black, fontSize: _w * 0.045),
+                                  color: Colors.black, fontSize: _w * 0.045)),
+                        ),
+                      if (msg.type == "image") _buildImageMessage(msg),
+                      if (msg.type == "file") _buildFileDownloadButton(msg),
+                      if (msg.type == "location")
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildMapInMessage(location!, coords!),
+                            Container(
+                              width: _w * 0.6,
+                              child: Text(
+                                location['place'],
+                                style: TextStyle(
+                                    color: Colors.black, fontSize: _w * 0.045),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                  ],
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -556,15 +563,48 @@ class _ChatState extends State<Chat> {
         ? Container(width: 40)
         : _room.users[msg.userId] == null
             ? CircleAvatar(child: Text("U"))
-            : _room.users[msg.userId]!.imgUrl == null ||
-                    _room.users[msg.userId]!.imgUrl!.isEmpty
-                ? CircleAvatar(
-                    child: Text(_room.users[msg.userId]!.name
-                        .substring(0, 2)
-                        .toUpperCase()))
-                : CircleAvatar(
-                    backgroundImage: ImageDatabaseService.getImageByImageId(
-                        _room.users[msg.userId]!.imgUrl!));
+            : GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) =>
+                        Profile(appUser: _room.users[msg.userId]!))),
+                child: _room.users[msg.userId]!.imgUrl == null ||
+                        _room.users[msg.userId]!.imgUrl!.isEmpty
+                    ? CircleAvatar(
+                        child: Text(_room.users[msg.userId]!.name
+                            .substring(0, 2)
+                            .toUpperCase()))
+                    : CircleAvatar(
+                        backgroundImage: ImageDatabaseService.getImageByImageId(
+                            _room.users[msg.userId]!.imgUrl!)),
+              );
+  }
+
+  void _showMessageLongPressSheet(ChatMessage msg) {
+    if (msg.type == "text" || msg.type == "location")
+      showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.copy_rounded),
+                title: Text("Copy"),
+                onTap: () {
+                  switch (msg.type) {
+                    case "text":
+                      Clipboard.setData(ClipboardData(text: msg.msg));
+                      break;
+                    case "location":
+                      Clipboard.setData(
+                          ClipboardData(text: jsonDecode(msg.msg)['place']));
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
   }
 
   Future<void> _sendMessage() async {

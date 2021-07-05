@@ -8,6 +8,7 @@ class WebSockets {
 
         // subscribe person to chat & other user as well
         client.on("subscribe", (room) => {
+            //console.log(room.room);
             client.join(room.room);
         });
 

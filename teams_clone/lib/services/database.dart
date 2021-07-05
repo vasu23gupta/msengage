@@ -9,8 +9,8 @@ import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:latlong2/latlong.dart';
 
 /// URL of server.
-//const String URL = "http://10.0.2.2:3000/";
-const String URL = "https://teams-clone-by-vasu.herokuapp.com/";
+const String URL = "http://10.0.2.2:3000/";
+//const String URL = "https://teams-clone-by-vasu.herokuapp.com/";
 //const String URL = "http://localhost:3000/";
 
 /// To handle all formdata and query parameters related calls.
@@ -119,6 +119,14 @@ class ChatDatabaseService {
     return _rooms;
   }
 
+  static Future<bool> joinChatRoom(String roomId, User user) async {
+    http.Response res = await http.patch(
+      Uri.parse(_chatUrl + "room/join/" + roomId),
+      headers: {'authorisation': user.uid},
+    );
+    return res.statusCode == 200;
+  }
+
   /// Add users in a chat room. Returns true if all users were added, false
   /// otherwise.
   static Future<bool> addUsersToChatRoom(
@@ -135,23 +143,22 @@ class ChatDatabaseService {
 
   /// Create a new chat room. [ids] is list of user ids of participants,
   /// [room] has to contain the name and image of the chat room, [uid] is user
-  /// id of creator of chat room. Returns room id of newly created room if new
-  /// room is created or a room with same participants and name exists,
-  /// null otherwise.
-  static Future<String?> createNewChatRoom(
-      List<String> ids, ChatRoom room, String uid) async {
+  /// id of creator of chat room. Returns room id of newly created room.
+  /// [initiationMessageFlag] is the first message send after creating the chat
+  /// room.
+  static Future<String> createNewChatRoom(List<String> ids, ChatRoom room,
+      String uid, String initiationMessageFlag) async {
     FormData formData = FormData.fromMap({
       'chatInitiator': uid,
       'name': room.name,
       'userIds': ids,
       'image':
           room.imgUrl == null ? "" : await MultipartFile.fromFile(room.imgUrl!),
+      'initiationMessageFlag': initiationMessageFlag
     });
     Response res = await _dio.post(_chatUrl + "initiate/", data: formData);
     var resBody = res.data;
-    return resBody['success'] == 'false'
-        ? null
-        : resBody['chatRoom']['chatRoomId'];
+    return resBody['chatRoom']['chatRoomId'];
   }
 
   /// Returns a complete chat room with id [roomId] .

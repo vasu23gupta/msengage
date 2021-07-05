@@ -1,2 +1,2 @@
 test nudity detector.
-assistant
+input validation.

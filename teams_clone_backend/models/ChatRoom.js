@@ -49,8 +49,7 @@ chatRoomSchema.statics.getChatRoomByRoomId = async function (roomId) {
 }
 
 /**
- * Create new chat room if a room with same users and room name doesn't exists,
- * otherwise return that room.
+ * Create new chat room and returns that room.
  * @param {Array} userIds - array of strings of userIds
  * @param {String} chatInitiator - user who initiated the chat
  * @param {String} name - name of chatroom
@@ -59,21 +58,6 @@ chatRoomSchema.statics.getChatRoomByRoomId = async function (roomId) {
  */
 chatRoomSchema.statics.initiateChat = async function (userIds, chatInitiator, name, file) {
   try {
-    const availableRoom = await this.findOne({
-      userIds: {
-        $size: userIds.length,
-        $all: [...userIds],
-      },
-      name: name,
-    });
-    if (availableRoom) {
-      return {
-        isNew: false,
-        message: 'retrieving an old chat room',
-        chatRoomId: availableRoom._doc._id,
-      };
-    }
-
     var imgUrl;
     if (file) {
       const savedImage = await Image.uploadImage(file, false);

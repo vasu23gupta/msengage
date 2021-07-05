@@ -65,10 +65,9 @@ class _AddUsersState extends State<AddUsers> {
   void _createChat() async {
     if (_room.roomId.isEmpty) {
       String? roomId = await ChatDatabaseService.createNewChatRoom(
-          _newEmailsAndIds.values.toList(), _room, _user!.uid);
-      if (roomId != null)
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => Chat(ChatRoom(roomId: roomId))));
+          _newEmailsAndIds.values.toList(), _room, _user!.uid, "chatroom");
+      Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => Chat(ChatRoom(roomId: roomId))));
     } else {
       bool done = await ChatDatabaseService.addUsersToChatRoom(
           _room.roomId, _newEmailsAndIds.values.toList());
