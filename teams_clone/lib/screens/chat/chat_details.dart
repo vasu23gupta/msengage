@@ -139,7 +139,7 @@ class _ChatDetailsState extends State<ChatDetails> {
   ListTile _buildProfanityFilterTile() {
     return ListTile(
       leading: Icon(Icons.report_gmailerrorred_rounded),
-      title: Text("Profanity filtering"),
+      title: Text("Censoring"),
       trailing: Switch(
         activeColor: PURPLE_COLOR,
         onChanged: (val) async {

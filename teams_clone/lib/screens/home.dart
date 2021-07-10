@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teams_clone/models/AppUser.dart';
+import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:teams_clone/screens/chat/chat_home.dart';
 import 'package:teams_clone/screens/meet/meet.dart';
 import 'package:teams_clone/screens/more/calendar.dart';
@@ -75,8 +76,13 @@ class _HomeState extends State<Home> {
       //elevation: 0,
       actions: [
         IconButton(
-            onPressed: () => MeetingService.joinMeeting(
-                MeetingService.emailToJitsiRoomId(_appUser.email), _user!),
+            onPressed: () async {
+              ChatRoom cr = ChatRoom(roomId: '');
+              cr.name = 'Meeting';
+              String? chatRoomId = await ChatDatabaseService.createNewChatRoom(
+                  [], cr, _user!.uid, "meeting");
+              MeetingService.joinMeeting(chatRoomId, _user!, name: "meeting");
+            },
             icon: Icon(Icons.video_call_rounded))
       ],
       bottom: buildSearchBar(context),

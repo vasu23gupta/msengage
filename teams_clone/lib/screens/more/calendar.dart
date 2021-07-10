@@ -60,7 +60,8 @@ class _CalendarState extends State<Calendar> {
     if (_room == null) {
       _events = await CalendarDatabaseService.getEventFromUserId(_user!.uid);
     } else {
-      _room!.events.clear();
+      _room = await ChatDatabaseService.getChatRoomByRoomId(_room!.roomId);
+
       for (String eventId in _room!.eventIds)
         _room!.events
             .add(await CalendarDatabaseService.getEventFromEventId(eventId));

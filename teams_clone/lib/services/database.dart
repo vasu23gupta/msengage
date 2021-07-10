@@ -9,8 +9,8 @@ import 'package:teams_clone/models/ChatRoom.dart';
 import 'package:latlong2/latlong.dart';
 
 /// URL of server.
-const String URL = "http://10.0.2.2:3000/";
-//const String URL = "https://teams-clone-by-vasu.herokuapp.com/";
+//const String URL = "http://10.0.2.2:3000/";
+const String URL = "https://teams-clone-by-vasu.herokuapp.com/";
 //const String URL = "http://localhost:3000/";
 
 /// To handle all formdata and query parameters related calls.
@@ -308,15 +308,14 @@ class ImageDatabaseService {
       'image': await MultipartFile.fromFile(path),
       'filter': filter,
     });
-
-    Response res = await _dio.post(_imagesUrl, data: formData);
-    String imgId;
-    print(res.data);
-    if (res.statusCode != 200)
-      imgId = '';
-    else
+    late Response res;
+    late String imgId;
+    try {
+      res = await _dio.post(_imagesUrl, data: formData);
       imgId = res.data;
-
-    return imgId;
+      return imgId;
+    } catch (err) {
+      return '';
+    }
   }
 }

@@ -48,7 +48,7 @@ router.post('/', upload.single('image'), async function (req, res) {
         var savedImage = await Image.uploadImage(f, filter);
         res.json(savedImage._id);
     } catch (err) {
-        res.json({ message: err });
+        res.status(err.status || 500).json({ message: err });
     }
 });
 
