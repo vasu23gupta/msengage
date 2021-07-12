@@ -1,5 +1,4 @@
-# msengage
-Microsoft Teams clone which I made for Microsoft Engage 2021 mentorship program.
+#Microsoft Teams clone which I made for Microsoft Engage 2021 mentorship program.
 
 DEMO LINK: https://youtu.be/GxoqLromQJY
 
