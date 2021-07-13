@@ -2,6 +2,8 @@
 
 DEMO LINK: https://youtu.be/GxoqLromQJY
 
+APK LINK: https://drive.google.com/file/d/1xJzIQ19ogx3gPqG4yEl4U5J7sduFoAkw/view?usp=sharing
+
 FRONT-END: The front end is a cross platform application made in Flutter, however only android is completely supported right now.
 
 BACKEND: The backend is made using Node.js, ExpressJS, MongoDB, mongoose, and it is hosted on heroku whereas the database is hosted on mongodb atlas.
