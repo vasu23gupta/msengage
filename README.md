@@ -19,8 +19,7 @@ Features:
 More details about each feature was implemented below.
 
 Screenshots
-
-![](./screenshots/sign in.png =50*250)
+![](./screenshots/sign in.png)
 
 More details about how each feature was implemented:
 
