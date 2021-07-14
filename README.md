@@ -16,6 +16,20 @@ Features:
 - Cached images.
 - Censorship: cleans english profanity in messages and prevents images containing explicit content to be sent in chat rooms where censorship is enabled.
 
+
+![sign in](./screenshots/sign_in.png)
+![register](./screenshots/register.png)
+![chat home](./screenshots/chat_home.png)
+![chat](./screenshots/chat.png)
+![chat details](./screenshots/chat_details.png)
+![calendar](./screenshots/calendar.png)
+![search](./screenshots/search1.png)
+![search](./screenshots/search2.png)
+![create and join meeting](./screenshots/create_join_meet.png)
+![meeting](./screenshots/meet.png)
+![meeting](./screenshots/meet_pip_screen_share.png)
+![profile](./screenshots/profile.png)
+
 More details about how each feature was implemented:
 
 FRONT-END: The front end is a cross platform application made in Flutter, however only android is completely supported right now with many features also available on web.
