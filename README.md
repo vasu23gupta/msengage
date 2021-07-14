@@ -4,7 +4,7 @@ DEMO LINK: https://youtu.be/GxoqLromQJY
 
 APK LINK: https://drive.google.com/file/d/1xJzIQ19ogx3gPqG4yEl4U5J7sduFoAkw/view?usp=sharing
 
-Features:
+## Features:
 - Sign in and Register.
 - Chat rooms with room name and icon.
 - Add people to chat room and leave chat room.
@@ -16,19 +16,28 @@ Features:
 - Cached images.
 - Censorship: cleans english profanity in messages and prevents images containing explicit content to be sent in chat rooms where censorship is enabled.
 
-
+## Screenshots
+### Authenticate 
 ![sign in](./screenshots/sign_in.png)
 ![register](./screenshots/register.png)
+### Chat
 ![chat home](./screenshots/chat_home.png)
 ![chat](./screenshots/chat.png)
 ![chat details](./screenshots/chat_details.png)
+### Calendar
 ![calendar](./screenshots/calendar.png)
+![create event](./screenshots/create_event.png)
+![event details](./screenshots/event_details.png)
+### Search
 ![search](./screenshots/search1.png)
 ![search](./screenshots/search2.png)
+### Video meeting
 ![create and join meeting](./screenshots/create_join_meet.png)
 ![meeting](./screenshots/meet.png)
 ![meeting](./screenshots/meet_pip_screen_share.png)
+### Profile
 ![profile](./screenshots/profile.png)
+![other profile](./screenshots/other_profile.png)
 
 More details about how each feature was implemented:
 
