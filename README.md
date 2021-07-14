@@ -4,11 +4,25 @@ DEMO LINK: https://youtu.be/GxoqLromQJY
 
 APK LINK: https://drive.google.com/file/d/1xJzIQ19ogx3gPqG4yEl4U5J7sduFoAkw/view?usp=sharing
 
+Features:
+- Sign in and Register.
+- Chat rooms with room name and icon.
+- Add people to chat room and leave chat room.
+- Group chat with text, image, file and location messages.
+- Synchronised Calendar for all users and chat rooms.
+- Create personal and team events.
+- Application-wide search: search for chat messages, chat rooms and events.
+- Group video call with hand raising, screen sharing, picture in picture mode, mute mic, disable video, switch between front and rear cameras.
+- Cached images.
+- Censorship: cleans english profanity in messages and prevents images containing explicit content to be sent in chat rooms where censorship is enabled.
+
+More details about how each feature was implemented:
+
 FRONT-END: The front end is a cross platform application made in Flutter, however only android is completely supported right now.
 
 BACKEND: The backend is made using Node.js, ExpressJS, MongoDB, mongoose, and it is hosted on heroku whereas the database is hosted on mongodb atlas.
 
-AUTHENTICATION: I've added email and password authentication using google firebase. Users can register, sign-in and logout.
+AUTHENTICATION: Email and password authentication using google firebase.
 
 CHAT: I've used socket.io to implement chat. I've also added support for media and location messages. Images are being stored in mongodb whereas files are being stored in firebase storage. Images are being cached in the application to reduce data usage.
 
