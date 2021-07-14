@@ -18,7 +18,7 @@ Features:
 
 More details about how each feature was implemented:
 
-FRONT-END: The front end is a cross platform application made in Flutter, however only android is completely supported right now.
+FRONT-END: The front end is a cross platform application made in Flutter, however only android is completely supported right now with many features also available on web.
 
 BACKEND: The backend is made using Node.js, ExpressJS, MongoDB, mongoose, and it is hosted on heroku whereas the database is hosted on mongodb atlas.
 
