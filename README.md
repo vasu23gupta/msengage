@@ -20,8 +20,7 @@ More details about each feature was implemented below.
 
 Screenshots
 
-![](./screenshots/sign in.png?raw=true)
-![](./screenshots/register.png?raw=true)
+![](./screenshots/sign in.png =50*250)
 
 More details about how each feature was implemented:
 
