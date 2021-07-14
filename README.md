@@ -56,3 +56,7 @@ CALENDAR: I've also added a synchronised calendar where users can create events 
 SEARCH: A search feature is also added which can search for chat rooms, chat messages (text messages and file messages' names only) and events. A search is performed by making a regular expression from the user's query and then using mongodb's find function.
 
 CENSORSHIP: An additional feature which cleans english profanity in messages and prevents images containing explicit content to be sent in chat rooms where censorship is enabled. Images are filtered using deepai's nsfw detector api.
+
+Other features: There are various input validations, ui features and much more, which were not covered in the demo video. Use the app to find them out ;) .
+
+I also tried to add an AI assistant using google's dialogflow, alan voice, and even an assistant from scratch in python, but couldn't figure it out in the stipulated time. Other features which i explored to add were voice messages, CI/CD, JWT authentication, etc, but in the end I chose to improve the quality of my code and add documentation. Except the UI part, all the logic part of the code of both front-end and backend are well documented.
