@@ -19,9 +19,9 @@ Features:
 More details about each feature was implemented below.
 
 Screenshots
-- Sign in and register
-![](./screenshots/sign in.png)
-![](./screenshots/register.png)
+
+![](./screenshots/sign in.png?raw=true)
+![](./screenshots/register.png?raw=true)
 
 More details about how each feature was implemented:
 
