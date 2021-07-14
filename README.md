@@ -16,7 +16,7 @@ Features:
 - Cached images.
 - Censorship: cleans english profanity in messages and prevents images containing explicit content to be sent in chat rooms where censorship is enabled.
 
-![](./screenshots/register.png =100x20)
+![ ](./screenshots/register.png =100x20)
 
 More details about how each feature was implemented:
 
