@@ -2,7 +2,7 @@
 
 DEMO LINK: https://youtu.be/GxoqLromQJY
 
-APK LINK: https://drive.google.com/file/d/1xJzIQ19ogx3gPqG4yEl4U5J7sduFoAkw/view?usp=sharing
+APK LINK: https://drive.google.com/file/d/1wL3vV1te4Q1gfF-vlkSpr4syFry9WHCb/view?usp=sharing
 
 ## Features:
 - Sign in and Register.
